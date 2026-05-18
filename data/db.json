@@ -1,0 +1,33 @@
+{
+  "tempUserIDs": [
+    {
+      "email": "temp@mail.com",
+      "password": "pass123456",
+      "id": "KirZIbyw4u8"
+    },
+    {
+      "email": "temp2@gmail.com",
+      "password": "pass12345678",
+      "id": "vv2mcdbNYWk"
+    },
+    {
+      "email": "adsf@gmail.com",
+      "password": "posd",
+      "remember": true,
+      "id": "t02IcI0JFiI"
+    },
+    {
+      "email": "ads@gmail.com",
+      "password": "sada",
+      "remember": true,
+      "id": "GY84Xc73HOU"
+    },
+    {
+      "email": "assfd@gmail.com",
+      "password": "eredff",
+      "remember": true,
+      "id": "ekVPlii_GXw"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

@@ -2,23 +2,26 @@ import './App.css'
 
 import './index.css';
 
-import Navbar from './components/Navbar'
-import Home from './pages/Home';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 
-import { Routes,Route } from 'react-router-dom';
+import {Routes, Route} from 'react-router-dom';
 
+import api from './api/axios';
 
 function App() {
+
+ 
   return(
     <div>
-      <Navbar />
+
       <Routes>
-        <Route path='/' element={<Home />}/>
-        <Route path='/Dashboard' element={<Dashboard />} />
-        <Route path='/Login' element={<Login />} />
+        <Route path='/' element={<Login />}></Route>
+        <Route path='/signup' element={<Signup />}></Route>
+        <Route path='/dashboard' element={<Dashboard />}></Route>
       </Routes>
+      
     </div>
   )
 }
