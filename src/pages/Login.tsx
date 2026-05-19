@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 
 import api from "../api/axios";
 import AuthLayout from "../layouts/AuthLayout";
@@ -9,6 +10,14 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
+
+  const authToken = localStorage.getItem("authToken");
+
+  useEffect(() => {
+    if (authToken) {
+      navigate("/dashboard");
+    }
+  });
 
   function handleEmailInput(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
@@ -29,20 +38,25 @@ const Login = () => {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const userData = { email, password };
+    const userData = {
+      email: email,
+      password: password,
+    };
 
     try {
-        const response = await api.post('/login', userData);
-        console.log('Success:', response.data);
-        localStorage.setItem('token', response.data.token);
-        
-        setEmail('');
-        setPassword('');
-        setRemember(false);
-        navigate('/dashboard');
-    } catch(error) {
-        console.error("Error logging in:", error);
-        alert("Invalid credentials");
+      const response = await api.post("/login", userData);
+      console.log("Success:", response.data);
+      localStorage.setItem("token", response.data.token);
+
+      setEmail("");
+      setPassword("");
+      setRemember(false);
+
+      localStorage.setItem("authToken", response.data.token);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("Invalid credentials");
     }
   }
 

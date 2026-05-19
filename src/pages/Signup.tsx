@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
@@ -9,6 +9,14 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
+
+  const authToken = localStorage.getItem("authToken");
+
+  useEffect(() => {
+    if (authToken) {
+      navigate("/dashboard");
+    }
+  });
 
   function handleUsernameInput(e: React.ChangeEvent<HTMLInputElement>) {
     setUsername(e.target.value);
@@ -44,18 +52,22 @@ const Signup = () => {
     }
 
     try {
-        const response = await api.post('/register', { username, email, password });
-        console.log('Success:', response.data);
-        localStorage.setItem('token', response.data.token);
-        
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        navigate('/dashboard');
+      const response = await api.post("/register", {
+        username,
+        email,
+        password,
+      });
+      console.log("Success:", response.data);
+      localStorage.setItem("token", response.data.token);
+
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      navigate("/dashboard");
     } catch (error) {
-        console.error("Error signing up:", error);
-        alert("Signup failed. User might already exist.");
+      console.error("Error signing up:", error);
+      alert("Signup failed. User might already exist.");
     }
   }
 

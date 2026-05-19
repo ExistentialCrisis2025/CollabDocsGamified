@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+console.log(process.env.DB_PASSWORD);
+console.log(process.env.JWT_SECRET);
 const pool = require('./db');
 
 const app = express();
@@ -34,6 +36,9 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
       [username, email, hashedPassword]
     );
+
+    const users = await pool.query('SELECT * FROM users');
+console.log(users.rows);
 
     // Generate JWT
     const token = jwt.sign(
