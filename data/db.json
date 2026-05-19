@@ -27,6 +27,18 @@
       "password": "eredff",
       "remember": true,
       "id": "ekVPlii_GXw"
+    },
+    {
+      "email": "asfsf@gmail",
+      "password": "pormsfkms",
+      "remember": true,
+      "id": "zQENXoBuq5I"
+    },
+    {
+      "email": "adsf@gs",
+      "password": "asasadf",
+      "remember": true,
+      "id": "2HfyRUmF4pU"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
