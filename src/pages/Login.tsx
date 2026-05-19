@@ -29,22 +29,20 @@ const Login = () => {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const userData = {
-      email,
-      password,
-      remember,
-    };
+    const userData = { email, password };
 
     try {
-      const response = await api.post("/tempUserIDs", userData);
-
-      console.log("Success:", response.data);
-
-      setEmail("");
-      setPassword("");
-      setRemember(false);
-    } catch (error) {
-      console.error("Error sending data:", error);
+        const response = await api.post('/login', userData);
+        console.log('Success:', response.data);
+        localStorage.setItem('token', response.data.token);
+        
+        setEmail('');
+        setPassword('');
+        setRemember(false);
+        navigate('/dashboard');
+    } catch(error) {
+        console.error("Error logging in:", error);
+        alert("Invalid credentials");
     }
   }
 

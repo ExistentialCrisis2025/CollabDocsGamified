@@ -1,15 +1,21 @@
 import { useState } from "react";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
   function handleUsernameInput(e: React.ChangeEvent<HTMLInputElement>) {
     setUsername(e.target.value);
+  }
+
+  function handleEmailInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setEmail(e.target.value);
   }
 
   function handlePasswordInput(e: React.ChangeEvent<HTMLInputElement>) {
@@ -24,7 +30,7 @@ const Signup = () => {
     navigate("/");
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (password.length < 8) {
@@ -37,12 +43,20 @@ const Signup = () => {
       return;
     }
 
-    console.log(username);
-    console.log(password);
-
-    setUsername("");
-    setPassword("");
-    setConfirmPassword("");
+    try {
+        const response = await api.post('/register', { username, email, password });
+        console.log('Success:', response.data);
+        localStorage.setItem('token', response.data.token);
+        
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        navigate('/dashboard');
+    } catch (error) {
+        console.error("Error signing up:", error);
+        alert("Signup failed. User might already exist.");
+    }
   }
 
   return (
@@ -70,6 +84,25 @@ const Signup = () => {
               required
               onChange={handleUsernameInput}
               value={username}
+              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              placeholder="Enter Email"
+              name="email"
+              required
+              onChange={handleEmailInput}
+              value={email}
               className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
