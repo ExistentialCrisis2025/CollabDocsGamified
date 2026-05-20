@@ -22,57 +22,88 @@ const Kanban = () => {
     item: Item;
   };
 
-  const [columns, setColumns] = useState({
-    todo: {
-      name: "To Do",
-      items: [
-        { id: "1", content: "Content 1" },
-        { id: "2", content: "Content 2" },
-      ],
+  type Priority = "low" | "medium" | "high";
+
+  type Status = "todo" | "in-progress" | "done";
+
+  type Task = {
+    user_id: number;
+    task_id: number;
+    title: string;
+    description: string;
+    priority: Priority;
+    due_date: string;
+    xp_reward: number;
+    status: Status;
+  };
+
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      user_id: 1,
+      task_id: 1,
+      title: "Finish Kanban UI",
+      description: "Build the frontend board layout",
+      priority: "high",
+      due_date: "2026-05-20T10:00:00.000Z",
+      xp_reward: 100,
+      status: "todo",
     },
 
-    inProgress: {
-      name: "In Progress",
-      items: [{ id: "3", content: "Content 3" }],
+    {
+      user_id: 1,
+      task_id: 2,
+      title: "Connect Backend API",
+      description: "Fetch tasks from Express backend",
+      priority: "medium",
+      due_date: "2026-05-21T14:00:00.000Z",
+      xp_reward: 150,
+      status: "in-progress",
     },
 
-    done: {
-      name: "Done",
-      items: [{ id: "4", content: "Content 4" }],
+    {
+      user_id: 1,
+      task_id: 3,
+      title: "Setup JWT Authentication",
+      description: "Store and validate auth tokens",
+      priority: "low",
+      due_date: "2026-05-18T18:00:00.000Z",
+      xp_reward: 80,
+      status: "done",
     },
-  });
+  ]);
 
-  const [newTask, setNewTask] = useState("");
-  const [activeColumn, setActiveColumn] =
-    useState<keyof typeof columns>("todo");
+  const columns = {
+    todo: tasks.filter((task) => task.status === "todo"),
+    inProgress: tasks.filter((task) => task.status === "in-progress"),
+    done: tasks.filter((task) => task.status === "done"),
+  };
 
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
 
-  const addNewTask = () => {
-    if (newTask.trim() === "") {
-      return;
-    }
+  const addNewTask = (TaskItem: Task) => {
+    const updatedTasks = [...tasks];
+    updatedTasks.push(TaskItem);
 
-    const updatedColumns = { ...columns };
-
-    updatedColumns[activeColumn as keyof typeof columns].items.push({
-      id: Date.now().toString(),
-      content: newTask,
-    });
-
-    setColumns(updatedColumns);
-
-    setNewTask("");
+    setTasks(updatedTasks);
   };
 
-  const removeTask = (columnId: keyof typeof columns, taskID: string) => {
-    const updatedColumns = { ...columns };
+  const removeTask = (taskID: number) => {
+    let updatedTasks = [...tasks];
 
-    updatedColumns[columnId].items = updatedColumns[columnId].items.filter(
-      (item) => item.id !== taskID,
-    );
+    updatedTasks = updatedTasks.filter((task) => task.task_id !== taskID);
 
-    setColumns(updatedColumns);
+    setTasks(updatedTasks);
+  };
+
+  const updateTaskStatus = (taskID: number, taskStatus: Status) => {
+    const updatedTasks = [...tasks];
+
+    const task = updatedTasks.find((task) => task.task_id === taskID);
+    if (task) {
+      task.status = taskStatus;
+    }
+
+    setTasks(updatedTasks);
   };
 
   const handleDragStart = (
@@ -105,7 +136,7 @@ const Kanban = () => {
       sourceColumnID
     ].items.filter((i) => i.id != item.id);
 
-    updatedColumns[columnId].items.push(item);
+    updateColumns[columnId].items.push(item);
 
     setColumns(updateColumns);
     setDraggedItem(null);
