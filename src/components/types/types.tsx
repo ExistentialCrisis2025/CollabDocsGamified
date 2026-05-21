@@ -27,3 +27,12 @@ export type Task = {
   xp_reward: number;
   status: Status;
 };
+
+export type newTask = {
+  title: string;
+  description: string;
+  priority: Priority;
+  due_date: string;
+  xp_reward: number;
+  status: Status;
+};

@@ -1,50 +1,33 @@
-import React, { useState } from "react";
-import type {
-  Item,
-  Column,
-  DraggedItem,
-  Priority,
-  Status,
-  Task,
-} from "./types/types";
+import React, { useEffect, useState, useRef } from "react";
+import type { Item, Priority, Status, Task } from "./types/types";
+import api from "../api/axios";
 
 import KanbanColumn from "./KanbanColumn";
 
 const Kanban = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      user_id: 1,
-      task_id: 1,
-      title: "Finish Kanban UI",
-      description: "Build the frontend board layout",
-      priority: "high",
-      due_date: "2026-05-20T10:00:00.000Z",
-      xp_reward: 100,
-      status: "todo",
-    },
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<Priority>("medium");
+  const [dueDate, setDueDate] = useState("");
+  const [xpReward, setXpReward] = useState(0);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const loadRef = useRef(false);
 
-    {
-      user_id: 1,
-      task_id: 2,
-      title: "Connect Backend API",
-      description: "Fetch tasks from Express backend",
-      priority: "medium",
-      due_date: "2026-05-21T14:00:00.000Z",
-      xp_reward: 150,
-      status: "in-progress",
-    },
+  async function fetchTask() {
+    const token = localStorage.getItem("authToken");
+    console.log(token);
 
-    {
-      user_id: 1,
-      task_id: 3,
-      title: "Setup JWT Authentication",
-      description: "Store and validate auth tokens",
-      priority: "low",
-      due_date: "2026-05-18T18:00:00.000Z",
-      xp_reward: 80,
-      status: "done",
-    },
-  ]);
+    try {
+      const response = await api.get("/tasks", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log(response);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetchind data due to: ", error);
+      alert("There seems to be an error in fetching data, please try later");
+    }
+  }
 
   const columns = {
     todo: tasks.filter((task) => task.status === "todo"),
@@ -52,13 +35,32 @@ const Kanban = () => {
     done: tasks.filter((task) => task.status === "done"),
   };
 
-  const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
+  const addNewTask = () => {
+    if (!title.trim()) return;
 
-  const addNewTask = (TaskItem: Task) => {
-    const updatedTasks = [...tasks];
-    updatedTasks.push(TaskItem);
+    const newTask: Task = {
+      user_id: 1,
+      task_id: Date.now(),
 
-    setTasks(updatedTasks);
+      title,
+      description,
+
+      priority,
+
+      due_date: dueDate,
+
+      xp_reward: xpReward,
+
+      status: "todo",
+    };
+
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+
+    setTitle("");
+    setDescription("");
+    setPriority("medium");
+    setDueDate("");
+    setXpReward(0);
   };
 
   const removeTask = (taskID: number) => {
@@ -76,27 +78,89 @@ const Kanban = () => {
 
     setTasks(updatedTasks);
   };
+  useEffect(() => {
+    if (!loadRef.current) {
+      loadRef.current = true;
+      fetchTask();
+    }
+  }, []);
 
   return (
-    <div className="p-6 w-full min-h-screen bg-linear-to-b from-zinc-900 to-zinc-800 flex items-center justify-center">
-      <div className="flex items-center justify-center flex-col gap-4 w-full max-w-6xl">
-        <h1 className="text-6xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-rose-400">
+    <div className="min-h-screen w-full bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+        <h1 className="bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500 bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent md:text-6xl">
           Task Board
         </h1>
 
-        <div>
+        <div className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-2xl">
+          <h2 className="mb-6 text-2xl font-bold text-white">
+            Create New Task
+          </h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Task Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+            />
+
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Priority)}
+              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+
+            <textarea
+              placeholder="Task Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-120px rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400 md:col-span-2"
+            />
+
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+            />
+
+            <input
+              type="number"
+              placeholder="XP Reward"
+              value={xpReward}
+              onChange={(e) => setXpReward(Number(e.target.value))}
+              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+            />
+          </div>
+
+          <button
+            onClick={addNewTask}
+            className="mt-6 w-full rounded-xl bg-linear-to-r from-yellow-500 to-orange-500 px-4 py-3 font-bold text-black transition hover:scale-[1.01]"
+          >
+            Add Task
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <KanbanColumn
             removeTask={removeTask}
             title={"todo"}
             tasks={columns.todo}
             updateTaskStatus={updateTaskStatus}
           />
+
           <KanbanColumn
             removeTask={removeTask}
             title={"in-progress"}
             tasks={columns.inProgress}
             updateTaskStatus={updateTaskStatus}
           />
+
           <KanbanColumn
             removeTask={removeTask}
             title={"done"}

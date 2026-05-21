@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import pool from './db';
+import { userInfo } from 'os';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ export const authenticateToken = (req: Request, res: Response, next: express.Nex
   }
 
   try {
+    console.log(req.headers.authorization);
     const verified = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     (req as any).user = verified;
     next();
@@ -125,6 +127,7 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
 // Create Task
 app.post('/tasks', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log(authenticateToken);
     const userId = (req as any).user.id;
     const { title, description, priority, due_date, xp_reward, status } = req.body;
 
