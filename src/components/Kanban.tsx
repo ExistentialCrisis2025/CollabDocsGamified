@@ -1,42 +1,16 @@
 import React, { useState } from "react";
+import type {
+  Item,
+  Column,
+  DraggedItem,
+  Priority,
+  Status,
+  Task,
+} from "./types/types";
+
+import KanbanColumn from "./KanbanColumn";
 
 const Kanban = () => {
-  type Item = {
-    id: string;
-    content: string;
-  };
-
-  type Column = {
-    name: string;
-    items: Item[];
-  };
-
-  type Columns = {
-    todo: Column;
-    inProgress: Column;
-    done: Column;
-  };
-
-  type DraggedItem = {
-    columnID: keyof typeof columns;
-    item: Item;
-  };
-
-  type Priority = "low" | "medium" | "high";
-
-  type Status = "todo" | "in-progress" | "done";
-
-  type Task = {
-    user_id: number;
-    task_id: number;
-    title: string;
-    description: string;
-    priority: Priority;
-    due_date: string;
-    xp_reward: number;
-    status: Status;
-  };
-
   const [tasks, setTasks] = useState<Task[]>([
     {
       user_id: 1,
@@ -96,53 +70,43 @@ const Kanban = () => {
   };
 
   const updateTaskStatus = (taskID: number, taskStatus: Status) => {
-    const updatedTasks = [...tasks];
-
-    const task = updatedTasks.find((task) => task.task_id === taskID);
-    if (task) {
-      task.status = taskStatus;
-    }
+    const updatedTasks = tasks.map((task) =>
+      task.task_id === taskID ? { ...task, status: taskStatus } : task,
+    );
 
     setTasks(updatedTasks);
   };
 
-  const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    columnID: keyof typeof columns,
-    item: Item,
-  ) => {
-    setDraggedItem({ columnID, item });
-  };
+  return (
+    <div className="p-6 w-full min-h-screen bg-linear-to-b from-zinc-900 to-zinc-800 flex items-center justify-center">
+      <div className="flex items-center justify-center flex-col gap-4 w-full max-w-6xl">
+        <h1 className="text-6xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-rose-400">
+          Task Board
+        </h1>
 
-  const handeDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (
-    e: React.DragEvent<HTMLDivElement>,
-    columnId: keyof typeof columns,
-  ) => {
-    e.preventDefault();
-
-    if (!draggedItem) return;
-
-    const { columnID: sourceColumnID, item } = draggedItem;
-
-    if (sourceColumnID === columnId) return;
-
-    const updateColumns = { ...columns };
-
-    updateColumns[sourceColumnID].items = updateColumns[
-      sourceColumnID
-    ].items.filter((i) => i.id != item.id);
-
-    updateColumns[columnId].items.push(item);
-
-    setColumns(updateColumns);
-    setDraggedItem(null);
-  };
-
-  return <div></div>;
+        <div>
+          <KanbanColumn
+            removeTask={removeTask}
+            title={"todo"}
+            tasks={columns.todo}
+            updateTaskStatus={updateTaskStatus}
+          />
+          <KanbanColumn
+            removeTask={removeTask}
+            title={"in-progress"}
+            tasks={columns.inProgress}
+            updateTaskStatus={updateTaskStatus}
+          />
+          <KanbanColumn
+            removeTask={removeTask}
+            title={"done"}
+            tasks={columns.done}
+            updateTaskStatus={updateTaskStatus}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Kanban;
