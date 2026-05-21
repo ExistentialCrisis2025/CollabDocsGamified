@@ -18,8 +18,8 @@ export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "in-progress" | "done";
 
 export type Task = {
-  user_id: number;
   task_id: number;
+  user_id: number;
   title: string;
   description: string;
   priority: Priority;

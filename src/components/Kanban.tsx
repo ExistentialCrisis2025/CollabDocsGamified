@@ -35,48 +35,80 @@ const Kanban = () => {
     done: tasks.filter((task) => task.status === "done"),
   };
 
-  const addNewTask = () => {
+  const addNewTask = async () => {
     if (!title.trim()) return;
 
-    const newTask: Task = {
-      user_id: 1,
-      task_id: Date.now(),
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await api.post(
+        "/tasks",
+        {
+          title,
+          description,
+          priority,
+          due_date: dueDate || null,
+          xp_reward: xpReward,
+          status: "todo",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      title,
-      description,
+      // The backend returns the newly created task (with the real DB ID)
+      const createdTask = response.data;
+      
+      // Match the frontend interface: the DB returns `id`, frontend expects `task_id` generally, 
+      // but let's transform what we need to so it displays immediately
+      setTasks((prevTasks) => [...prevTasks, { 
+        ...createdTask, 
+        task_id: createdTask.id // Map the DB 'id' to 'task_id' for frontend 
+      }]);
 
-      priority,
-
-      due_date: dueDate,
-
-      xp_reward: xpReward,
-
-      status: "todo",
-    };
-
-    setTasks((prevTasks) => [...prevTasks, newTask]);
-
-    setTitle("");
-    setDescription("");
-    setPriority("medium");
-    setDueDate("");
-    setXpReward(0);
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      setDueDate("");
+      setXpReward(0);
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert("Failed to create task");
+    }
   };
 
-  const removeTask = (taskID: number) => {
-    let updatedTasks = [...tasks];
+  const removeTask = async (taskID: number) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await api.delete(`/tasks/${taskID}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    updatedTasks = updatedTasks.filter((task) => task.task_id !== taskID);
-
-    setTasks(updatedTasks);
+      let updatedTasks = [...tasks];
+      updatedTasks = updatedTasks.filter((task) => (task.task_id || (task as any).id) !== taskID);
+      setTasks(updatedTasks);
+    } catch (error) {
+      console.error("Error removing task:", error);
+      alert("Failed to delete task");
+    }
   };
 
-  const updateTaskStatus = (taskID: number, taskStatus: Status) => {
-    const updatedTasks = tasks.map((task) =>
-      task.task_id === taskID ? { ...task, status: taskStatus } : task,
-    );
+  const updateTaskStatus = async (taskID: number, taskStatus: Status) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await api.patch(
+        `/tasks/${taskID}/status`,
+        { status: taskStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    setTasks(updatedTasks);
+      const updatedTasks = tasks.map((task) =>
+        (task.task_id || (task as any).id) === taskID ? { ...task, status: taskStatus } : task,
+      );
+      setTasks(updatedTasks);
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      alert("Failed to update status");
+    }
   };
   useEffect(() => {
     if (!loadRef.current) {

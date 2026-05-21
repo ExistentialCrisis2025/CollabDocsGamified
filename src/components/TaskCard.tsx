@@ -28,10 +28,10 @@ const TaskCard = (Prop: prop) => {
 
         <span
           className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${
-            priorityColors[Prop.task.priority]
+            priorityColors[Prop.task.priority] || priorityColors.medium
           }`}
         >
-          {Prop.task.priority}
+          {Prop.task.priority || "medium"}
         </span>
       </div>
 
@@ -40,17 +40,17 @@ const TaskCard = (Prop: prop) => {
       </p>
 
       <div className="mb-4 flex items-center justify-between text-sm text-zinc-400">
-        <span>⚡ {Prop.task.xp_reward} XP</span>
+        <span>⚡ {Prop.task.xp_reward || 0} XP</span>
 
-        <span>{new Date(Prop.task.due_date).toLocaleDateString()}</span>
+        <span>{Prop.task.due_date ? new Date(Prop.task.due_date).toLocaleDateString() : 'No Due Date'}</span>
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2">
         {statusNeeded.map((stat) => (
           <button
             key={stat}
-            onClick={() => Prop.updateTaskStatus(Prop.task.task_id, stat)}
-            className="rounded-lg bg-zinc-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-600"
+            onClick={() => Prop.updateTaskStatus(Prop.task.task_id || (Prop.task as any).id, stat)}
+            className="rounded-lg bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-500 hover:text-black"
           >
             Move to {stat}
           </button>
@@ -58,8 +58,8 @@ const TaskCard = (Prop: prop) => {
       </div>
 
       <button
-        onClick={() => Prop.removeTask(Prop.task.task_id)}
-        className="w-full rounded-lg bg-red-500 px-4 py-2 font-semibold text-white transition hover:bg-red-600"
+        onClick={() => Prop.removeTask(Prop.task.task_id || (Prop.task as any).id)}
+        className="mt-2 w-full rounded-lg bg-red-500/10 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500 hover:text-white"
       >
         Delete
       </button>

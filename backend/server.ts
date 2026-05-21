@@ -203,12 +203,65 @@ app.patch('/tasks/:id/status', authenticateToken, async (req: Request, res: Resp
       return;
     }
 
+    const task = taskCheck.rows[0];
+    const oldStatus = task.status;
+    const xpReward = task.xp_reward || 0;
+
     const updatedTask = await pool.query(
       'UPDATE tasks SET status = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
       [status, taskId, userId]
     );
 
+    let xpAssigned = 0;
+
+    // XP Logic
+    if (oldStatus !== 'done' && status === 'done') {
+      xpAssigned = xpReward;
+      await pool.query('INSERT INTO xp_events (user_id, task_id, xp_amount) VALUES ($1, $2, $3)', [userId, taskId, xpReward]);
+    } else if (oldStatus === 'done' && status !== 'done') {
+      xpAssigned = -xpReward;
+      await pool.query('INSERT INTO xp_events (user_id, task_id, xp_amount) VALUES ($1, $2, $3)', [userId, taskId, -xpReward]);
+    }
+
+    if (xpAssigned !== 0) {
+      // Update user total_xp
+      const userRes = await pool.query('UPDATE users SET total_xp = total_xp + $1 WHERE id = $2 RETURNING total_xp', [xpAssigned, userId]);
+      const newTotalXp = userRes.rows[0].total_xp;
+
+      // Recalculate level
+      const levelRes = await pool.query('SELECT level FROM levels WHERE xp_threshold <= $1 ORDER BY level DESC LIMIT 1', [newTotalXp]);
+      const newLevel = levelRes.rows.length > 0 ? levelRes.rows[0].level : 1;
+
+      await pool.query('UPDATE users SET level = $1 WHERE id = $2', [newLevel, userId]);
+    }
+
     res.json(updatedTask.rows[0]);
+  } catch (err: any) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get User XP and Level
+app.get('/users/me/xp', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const userRes = await pool.query('SELECT total_xp, level FROM users WHERE id = $1', [userId]);
+    
+    if (userRes.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    
+    const currentLevel = userRes.rows[0].level;
+    const nextLevelRes = await pool.query('SELECT xp_threshold FROM levels WHERE level = $1', [currentLevel + 1]);
+    const nextLevelXp = nextLevelRes.rows.length > 0 ? nextLevelRes.rows[0].xp_threshold : null;
+    
+    res.json({
+      total_xp: userRes.rows[0].total_xp,
+      level: currentLevel,
+      next_level_xp: nextLevelXp
+    });
   } catch (err: any) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error' });
@@ -241,6 +294,33 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  try {
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS total_xp INT DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS level INT DEFAULT 1;
+
+      CREATE TABLE IF NOT EXISTS xp_events (
+          id SERIAL PRIMARY KEY,
+          user_id INT REFERENCES users(id) ON DELETE CASCADE,
+          task_id INT REFERENCES tasks(id) ON DELETE CASCADE,
+          xp_amount INT NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS levels (
+          level INT PRIMARY KEY,
+          xp_threshold INT NOT NULL
+      );
+
+      INSERT INTO levels (level, xp_threshold) VALUES
+      (1, 0), (2, 100), (3, 300), (4, 600), (5, 1000), 
+      (6, 1500), (7, 2100), (8, 2800), (9, 3600), (10, 4500)
+      ON CONFLICT (level) DO NOTHING;
+    `);
+    console.log("DB SCHEMA AUTO-MIGRATED SUCCESSFULLY");
+  } catch (err) {
+    console.error("MIGRATION FAILED", err);
+  }
   console.log(`Server running on port ${PORT}`);
 });
