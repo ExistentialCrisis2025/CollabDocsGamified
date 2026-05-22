@@ -1,4 +1,4 @@
-import pool from './backend/db';
+import pool from './db';
 
 async function migrate() {
   try {

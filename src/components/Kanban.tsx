@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
-import type { Item, Priority, Status, Task } from "./types/types";
+import { useEffect, useState, useRef } from "react";
+import type { Priority, Status, Task } from "./types/types";
 import api from "../api/axios";
 
 import KanbanColumn from "./KanbanColumn";
+import { DragDropContext } from "@hello-pangea/dnd";
 
 const Kanban = () => {
   const [title, setTitle] = useState("");
@@ -12,6 +13,22 @@ const Kanban = () => {
   const [xpReward, setXpReward] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const loadRef = useRef(false);
+
+  const handleOnDragEnd = async (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    )
+      return;
+
+    const newStatus = destination.droppableId as Status;
+
+    await updateTaskStatus(Number(draggableId), newStatus);
+  };
 
   async function fetchTask() {
     const token = localStorage.getItem("authToken");
@@ -31,7 +48,7 @@ const Kanban = () => {
 
   const columns = {
     todo: tasks.filter((task) => task.status === "todo"),
-    inProgress: tasks.filter((task) => task.status === "in-progress"),
+    "in-progress": tasks.filter((task) => task.status === "in-progress"),
     done: tasks.filter((task) => task.status === "done"),
   };
 
@@ -52,18 +69,10 @@ const Kanban = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
-      // The backend returns the newly created task (with the real DB ID)
-      const createdTask = response.data;
-      
-      // Match the frontend interface: the DB returns `id`, frontend expects `task_id` generally, 
-      // but let's transform what we need to so it displays immediately
-      setTasks((prevTasks) => [...prevTasks, { 
-        ...createdTask, 
-        task_id: createdTask.id // Map the DB 'id' to 'task_id' for frontend 
-      }]);
+      setTasks((prevTasks) => [...prevTasks, response.data]);
 
       setTitle("");
       setDescription("");
@@ -84,7 +93,7 @@ const Kanban = () => {
       });
 
       let updatedTasks = [...tasks];
-      updatedTasks = updatedTasks.filter((task) => (task.task_id || (task as any).id) !== taskID);
+      updatedTasks = updatedTasks.filter((task) => task.id !== taskID);
       setTasks(updatedTasks);
     } catch (error) {
       console.error("Error removing task:", error);
@@ -93,23 +102,35 @@ const Kanban = () => {
   };
 
   const updateTaskStatus = async (taskID: number, taskStatus: Status) => {
+    const previousTasks = tasks;
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskID ? { ...task, status: taskStatus } : task,
+    );
+
+    setTasks(updatedTasks);
+
     try {
       const token = localStorage.getItem("authToken");
+
       await api.patch(
         `/tasks/${taskID}/status`,
         { status: taskStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
-
-      const updatedTasks = tasks.map((task) =>
-        (task.task_id || (task as any).id) === taskID ? { ...task, status: taskStatus } : task,
-      );
-      setTasks(updatedTasks);
     } catch (error) {
       console.error("Error updating task status:", error);
+
+      setTasks(previousTasks);
+
       alert("Failed to update status");
     }
   };
+
   useEffect(() => {
     if (!loadRef.current) {
       loadRef.current = true;
@@ -178,28 +199,31 @@ const Kanban = () => {
             Add Task
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <KanbanColumn
-            removeTask={removeTask}
-            title={"todo"}
-            tasks={columns.todo}
-            updateTaskStatus={updateTaskStatus}
-          />
 
-          <KanbanColumn
-            removeTask={removeTask}
-            title={"in-progress"}
-            tasks={columns.inProgress}
-            updateTaskStatus={updateTaskStatus}
-          />
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <KanbanColumn
+              removeTask={removeTask}
+              title={"todo"}
+              tasks={columns.todo}
+              updateTaskStatus={updateTaskStatus}
+            />
 
-          <KanbanColumn
-            removeTask={removeTask}
-            title={"done"}
-            tasks={columns.done}
-            updateTaskStatus={updateTaskStatus}
-          />
-        </div>
+            <KanbanColumn
+              removeTask={removeTask}
+              title={"in-progress"}
+              tasks={columns["in-progress"]}
+              updateTaskStatus={updateTaskStatus}
+            />
+
+            <KanbanColumn
+              removeTask={removeTask}
+              title={"done"}
+              tasks={columns.done}
+              updateTaskStatus={updateTaskStatus}
+            />
+          </div>
+        </DragDropContext>
       </div>
     </div>
   );

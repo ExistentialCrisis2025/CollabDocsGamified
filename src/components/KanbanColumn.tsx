@@ -2,6 +2,7 @@ import "../index.css";
 import TaskCard from "./TaskCard";
 
 import type { Status, Task } from "./types/types";
+import { Droppable } from "@hello-pangea/dnd";
 
 type props = {
   title: Status;
@@ -30,30 +31,41 @@ const KanbanColumn = (Props: props) => {
 
   return (
     <div
-      className={`flex min-h-[600px] flex-col rounded-2xl border bg-zinc-900/80 p-4 shadow-2xl backdrop-blur-sm ${ColumnStyles[Props.title].border}`}
+      className={`flex min-h-150 flex-col rounded-2xl border bg-zinc-900/80 p-4 shadow-2xl ${ColumnStyles[Props.title].border}`}
     >
       <div
-        className={`mb-4 rounded-xl bg-gradient-to-r p-4 text-center text-lg font-bold uppercase tracking-wide text-white ${ColumnStyles[Props.title].header}`}
+        className={`mb-4 rounded-xl bg-linear-to-r p-4 text-center text-lg font-bold uppercase tracking-wide text-white ${ColumnStyles[Props.title].header}`}
       >
         {Props.title.replace("-", " ")}
       </div>
 
-      <div className="flex flex-1 flex-col gap-4">
-        {Props.tasks.map((task) => (
-          <TaskCard
-            removeTask={Props.removeTask}
-            key={task.task_id}
-            task={task}
-            updateTaskStatus={Props.updateTaskStatus}
-          />
-        ))}
+      <Droppable droppableId={Props.title}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex flex-1 flex-col gap-4"
+          >
+            {Props.tasks.map((task, index) => (
+              <TaskCard
+                removeTask={Props.removeTask}
+                key={task.id}
+                task={task}
+                updateTaskStatus={Props.updateTaskStatus}
+                index={index}
+              />
+            ))}
 
-        {Props.tasks.length === 0 && (
-          <div className="rounded-xl border border-dashed border-zinc-700 p-6 text-center text-sm text-zinc-500">
-            No tasks here
+            {Props.tasks.length === 0 && (
+              <div className="rounded-xl border border-dashed border-zinc-700 p-6 text-center text-sm text-zinc-500">
+                No tasks here
+              </div>
+            )}
+
+            {provided.placeholder}
           </div>
         )}
-      </div>
+      </Droppable>
     </div>
   );
 };
