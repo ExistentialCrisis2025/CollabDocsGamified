@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import type { Priority, Status, Task } from "./types/types";
 import api from "../api/axios";
+import XPBar from "./XPBar";
+import toast from "react-hot-toast";
 
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -13,6 +15,11 @@ const Kanban = () => {
   const [xpReward, setXpReward] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const loadRef = useRef(false);
+  const [xpData, setXpData] = useState({
+    total_xp: 0,
+    level: 1,
+    next_level_xp: 100,
+  });
 
   const handleOnDragEnd = async (result: any) => {
     const { destination, source, draggableId } = result;
@@ -46,6 +53,27 @@ const Kanban = () => {
     }
   }
 
+  async function fetchXP() {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await api.get("/users/me/xp", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.data.next_level_xp) {
+        response.data.next_level_xp = response.data.total_xp;
+      }
+
+      setXpData(response.data);
+      return response;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const columns = {
     todo: tasks.filter((task) => task.status === "todo"),
     "in-progress": tasks.filter((task) => task.status === "in-progress"),
@@ -74,6 +102,10 @@ const Kanban = () => {
 
       setTasks((prevTasks) => [...prevTasks, response.data]);
 
+      toast.success("Task created successfully!", {
+        duration: 2500,
+      });
+
       setTitle("");
       setDescription("");
       setPriority("medium");
@@ -95,6 +127,9 @@ const Kanban = () => {
       let updatedTasks = [...tasks];
       updatedTasks = updatedTasks.filter((task) => task.id !== taskID);
       setTasks(updatedTasks);
+      toast.success("Task deleted succesfully", {
+        duration: 2000,
+      });
     } catch (error) {
       console.error("Error removing task:", error);
       alert("Failed to delete task");
@@ -103,6 +138,10 @@ const Kanban = () => {
 
   const updateTaskStatus = async (taskID: number, taskStatus: Status) => {
     const previousTasks = tasks;
+    const previousLevel = xpData.level;
+
+    const task = tasks.find((task) => task.id === taskID);
+    const previousStatus = task?.status;
 
     const updatedTasks = tasks.map((task) =>
       task.id === taskID ? { ...task, status: taskStatus } : task,
@@ -122,6 +161,42 @@ const Kanban = () => {
           },
         },
       );
+
+      const response = await fetchXP();
+
+      const newXPData = response?.data;
+
+      if (taskStatus === "done" && previousStatus !== "done") {
+        toast.success(`XP Gained`, {
+          duration: 2200,
+
+          style: {
+            background: "#27272a",
+            color: "#facc15",
+            border: "1px solid rgba(250, 204, 21, 0.3)",
+            borderRadius: "14px",
+            padding: "14px",
+            fontWeight: "700",
+          },
+        });
+      }
+
+      if (newXPData) {
+        if (newXPData.level > previousLevel) {
+          toast.success(`Level Up! You reached Level ${newXPData.level}`, {
+            duration: 4000,
+
+            style: {
+              background: "linear-gradient(to right, #facc15, #f97316)",
+              color: "#000",
+              fontWeight: "700",
+              padding: "18px",
+              borderRadius: "18px",
+              boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
+            },
+          });
+        }
+      }
     } catch (error) {
       console.error("Error updating task status:", error);
 
@@ -135,12 +210,19 @@ const Kanban = () => {
     if (!loadRef.current) {
       loadRef.current = true;
       fetchTask();
+      fetchXP();
     }
   }, []);
 
   return (
     <div className="min-h-screen w-full bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-8">
+        <XPBar
+          totalXP={xpData.total_xp}
+          nextLevelXP={xpData.next_level_xp}
+          level={xpData.level}
+        ></XPBar>
+
         <h1 className="bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500 bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent md:text-6xl">
           Task Board
         </h1>
