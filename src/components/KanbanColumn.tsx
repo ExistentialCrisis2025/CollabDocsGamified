@@ -40,11 +40,25 @@ const KanbanColumn = (Props: props) => {
       </div>
 
       <Droppable droppableId={Props.title}>
-        {(provided) => (
+        {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="flex flex-1 flex-col gap-4"
+            className={`
+              flex flex-1 flex-col gap-4
+              rounded-xl transition-all duration-200
+
+              ${
+                snapshot.isDraggingOver
+                  ? `
+                        bg-zinc-800/70
+                        ring-2
+                        ring-yellow-400/30
+                        scale-[1.01]
+                      `
+                  : ""
+              }
+            `}
           >
             {Props.tasks.map((task, index) => (
               <TaskCard

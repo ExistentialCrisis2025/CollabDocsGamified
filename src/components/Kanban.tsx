@@ -7,7 +7,15 @@ import toast from "react-hot-toast";
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
 
-const Kanban = () => {
+import { Flame, Star, Trophy } from "lucide-react";
+
+type Props = {
+  fetchDashboard: () => void;
+  dashboardData: any;
+  remainingTasks: Task[];
+};
+
+const Kanban = (prop: Props) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
@@ -15,6 +23,8 @@ const Kanban = () => {
   const [xpReward, setXpReward] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const loadRef = useRef(false);
+  const [loading, setLoading] = useState(false);
+
   const [xpData, setXpData] = useState({
     total_xp: 0,
     level: 1,
@@ -82,6 +92,7 @@ const Kanban = () => {
 
   const addNewTask = async () => {
     if (!title.trim()) return;
+    setLoading(true);
 
     try {
       const token = localStorage.getItem("authToken");
@@ -114,6 +125,8 @@ const Kanban = () => {
     } catch (error) {
       console.error("Error creating task:", error);
       alert("Failed to create task");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,6 +175,8 @@ const Kanban = () => {
         },
       );
 
+      await prop.fetchDashboard();
+
       const response = await fetchXP();
 
       const newXPData = response?.data;
@@ -209,8 +224,10 @@ const Kanban = () => {
   useEffect(() => {
     if (!loadRef.current) {
       loadRef.current = true;
+
       fetchTask();
       fetchXP();
+      prop.fetchDashboard();
     }
   }, []);
 
@@ -226,6 +243,210 @@ const Kanban = () => {
         <h1 className="bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500 bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent md:text-6xl">
           Task Board
         </h1>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-orange-500/30 bg-zinc-900/80 p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <Flame
+                className={`h-8 w-8 ${
+                  prop.dashboardData?.user?.current_streak > 0
+                    ? "text-orange-500"
+                    : "text-zinc-500"
+                }`}
+              />
+
+              <div>
+                <h2 className="text-lg font-bold text-white">Daily Streak</h2>
+
+                <p className="text-sm text-zinc-400">
+                  Keep completing tasks daily
+                </p>
+              </div>
+            </div>
+
+            <div className="text-4xl font-black text-white">
+              {prop.dashboardData?.user?.current_streak || 0}
+            </div>
+
+            <div className="mt-2 text-sm text-zinc-400">
+              Best:
+              <span className="ml-1 font-semibold text-orange-400">
+                {prop.dashboardData?.user?.longest_streak || 0} days
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-yellow-500/30 bg-zinc-900/80 p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <Star className="h-8 w-8 text-yellow-400" />
+
+              <div>
+                <h2 className="text-lg font-bold text-white">Current Level</h2>
+
+                <p className="text-sm text-zinc-400">Your progression rank</p>
+              </div>
+            </div>
+
+            <div className="text-4xl font-black text-white">
+              {prop.dashboardData?.user?.level || 1}
+            </div>
+
+            <div className="mt-2 text-sm text-zinc-400">
+              Total XP:
+              <span className="ml-1 font-semibold text-yellow-400">
+                {prop.dashboardData?.user?.total_xp || 0}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-green-500/30 bg-zinc-900/80 p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <Trophy className="h-8 w-8 text-green-400" />
+
+              <div>
+                <h2 className="text-lg font-bold text-white">
+                  Today's Progress
+                </h2>
+
+                <p className="text-sm text-zinc-400">Tasks completed today</p>
+              </div>
+            </div>
+
+            <div className="text-4xl font-black text-white">
+              {prop.dashboardData?.tasks_completed_today || 0}
+            </div>
+
+            <div className="mt-2 text-sm text-zinc-400">
+              {prop.dashboardData?.completed_today
+                ? "🔥 Streak maintained"
+                : "Complete a task today"}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-white">
+            Welcome back,
+            <span className="ml-2 bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+              {prop.dashboardData?.user?.username || "User"} 👋
+            </span>
+          </h1>
+
+          <p className="mt-2 text-zinc-400">
+            Stay productive and keep your streak alive.
+          </p>
+        </div>
+
+        <div className="mb-8 rounded-2xl border border-yellow-500/20 bg-zinc-900/80 p-6 shadow-xl">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">XP Progress</h2>
+
+            <span className="text-sm font-semibold text-yellow-400">
+              Level {prop.dashboardData?.user?.level || 1}
+            </span>
+          </div>
+
+          <div className="h-5 w-full overflow-hidden rounded-full bg-zinc-700">
+            <div
+              className="
+            h-full rounded-full
+            bg-linear-to-r
+            from-yellow-400
+            via-orange-500
+            to-rose-500
+
+            transition-all
+            duration-700
+            ease-out
+
+            shadow-[0_0_20px_rgba(249,115,22,0.5)]
+         "
+              style={{
+                width: `${
+                  prop.dashboardData?.user?.next_level_xp
+                    ? (prop.dashboardData.user.total_xp /
+                        prop.dashboardData.user.next_level_xp) *
+                      100
+                    : 100
+                }%`,
+              }}
+            ></div>
+          </div>
+
+          <div className="mt-3 flex justify-between text-sm text-zinc-400">
+            <span>{prop.dashboardData?.user?.total_xp || 0} XP</span>
+
+            <span>
+              Next Level: {prop.dashboardData?.user?.next_level_xp || "MAX"}
+            </span>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-xl">
+          <h2 className="mb-6 text-2xl font-bold text-white">Today's Tasks</h2>
+
+          <div className="space-y-4">
+            {prop.remainingTasks.length > 0 ? (
+              prop.remainingTasks.map((task: any) => (
+                <div
+                  key={task.id}
+                  className="
+                  rounded-xl border border-zinc-700
+                  bg-zinc-800/70
+                  p-4 transition-all
+               "
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-white">{task.title}</h3>
+
+                      <p className="mt-1 text-sm text-zinc-400">
+                        {task.description || "No description"}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <div
+                        className="
+                           rounded-full
+                           bg-yellow-500/20
+                           px-3 py-1
+                           text-xs font-bold
+                           text-yellow-400
+                        "
+                      >
+                        {task.status}
+                      </div>
+
+                      <div className="mt-2 text-sm text-zinc-400">
+                        ⚡ {task.xp_reward} XP
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div
+                className="
+               rounded-xl border border-dashed
+               border-green-500/40
+               bg-green-500/5
+               p-8 text-center
+            "
+              >
+                <div className="mb-3 text-5xl">🎉</div>
+
+                <h3 className="text-xl font-bold text-white">
+                  No tasks remaining today!
+                </h3>
+
+                <p className="mt-2 text-zinc-400">
+                  You've completed everything for today.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-2xl">
           <h2 className="mb-6 text-2xl font-bold text-white">
@@ -276,9 +497,10 @@ const Kanban = () => {
 
           <button
             onClick={addNewTask}
-            className="mt-6 w-full rounded-xl bg-linear-to-r from-yellow-500 to-orange-500 px-4 py-3 font-bold text-black transition hover:scale-[1.01]"
+            className={`mt-6 w-full rounded-xl bg-linear-to-r from-yellow-500 to-orange-500 px-4 py-3 font-bold text-black transition-all ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.01]"}`}
+            disabled={loading}
           >
-            Add Task
+            {loading ? "Creating..." : "Add Task"}
           </button>
         </div>
 

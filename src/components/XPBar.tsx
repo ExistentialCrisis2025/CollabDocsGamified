@@ -20,7 +20,7 @@ const XPBar = (prop: Props) => {
 
       <div className="relative w-full h-6 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
         <div
-          className="h-full bg-linear-to-r from-cyan-500 to-blue-600 transition-all duration-500 ease-out rounded-full shadow-inner"
+          className="h-full bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500 transition-all duration-700 ease-out rounded-full shadow-[0_0_20px_rgba(249,115,22,0.5)]"
           style={{ width: `${percentage}%` }}
         />
 

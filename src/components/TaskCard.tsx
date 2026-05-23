@@ -32,18 +32,26 @@ const TaskCard = (Prop: prop) => {
           {...provided.dragHandleProps}
           style={provided.draggableProps.style}
           className={`
-        rounded-2xl
-        border
-        border-zinc-700
-        bg-zinc-800/90
-        p-5
-        shadow-lg
-        transition-colors
-        duration-200
-        hover:border-zinc-500
-        hover:shadow-2xl
-        ${snapshot.isDragging ? "ring-2 ring-yellow-400 shadow-2xl" : ""}
-      `}
+          rounded-2xl border border-zinc-700
+          bg-zinc-800/90 p-5 shadow-lg
+          transition-all duration-200
+          hover:-translate-y-1
+          hover:border-zinc-500
+          hover:shadow-2xl
+
+          ${
+            snapshot.isDragging
+              ? `
+                    rotate-1
+                    scale-105
+                    border-yellow-400
+                    shadow-[0_15px_40px_rgba(250,204,21,0.25)]
+                    ring-2
+                    ring-yellow-400/40
+                  `
+              : ""
+          }
+        `}
         >
           <div className="mb-3 flex items-start justify-between gap-3">
             <h2 className="text-lg font-bold text-white">{Prop.task.title}</h2>
