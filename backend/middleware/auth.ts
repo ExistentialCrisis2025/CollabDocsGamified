@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import redisClient from '../redisClient';
 
 /**
- * Middleware: verifies the Bearer JWT from Authorization header.
- * Attaches the decoded payload to req.user on success.
+ * Middleware: verifies the Bearer session token from Authorization header.
+ * Attaches the decoded payload (user id) to req.user on success.
  */
-export const authenticateToken = (
+export const authenticateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -19,10 +19,17 @@ export const authenticateToken = (
   }
 
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    (req as any).user = verified;
+    const userId = await redisClient.get(`session:${token}`);
+    
+    if (!userId) {
+      res.status(403).json({ error: 'Invalid or expired token' });
+      return;
+    }
+
+    (req as any).user = { id: parseInt(userId.toString(), 10) };
     next();
-  } catch {
-    res.status(403).json({ error: 'Invalid token' });
+  } catch (err: any) {
+    console.error('Auth middleware error:', err);
+    res.status(500).json({ error: 'Internal server error during authentication' });
   }
 };

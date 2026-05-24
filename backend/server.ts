@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes  from './routes/authRoutes';
 import taskRoutes  from './routes/taskRoutes';
 import userRoutes  from './routes/userRoutes';
+import leaderboardRoutes from './routes/leaderboardRoutes';
 import { startStreakCron } from './jobs/streakCron';
 
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/',       authRoutes);   // POST /register, POST /login
 app.use('/tasks',  taskRoutes);   // CRUD + status patch
 app.use('/users',  userRoutes);   // GET /users/me/xp, /me/streak, /me/dashboard
+app.use('/leaderboard', leaderboardRoutes); // GET /leaderboard/weekly
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'OK' }));

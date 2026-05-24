@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import pool from '../db';
 import { authenticateToken } from '../middleware/auth';
+import redisClient from '../redisClient';
 
 const router = Router();
 
@@ -153,6 +154,12 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
         [xpAssigned, userId]
       );
       const newTotalXp = userRes.rows[0].total_xp;
+
+      // Update Redis Leaderboard (Sorted Set)
+      await redisClient.zAdd('leaderboard_weekly', {
+        score: newTotalXp,
+        value: String(userId)
+      });
 
       const levelRes = await pool.query(
         'SELECT level FROM levels WHERE xp_threshold <= $1 ORDER BY level DESC LIMIT 1',

@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import pool from '../db';
+import redisClient from '../redisClient';
 
 const router = Router();
 
@@ -28,11 +29,10 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       [username, email, hashedPassword]
     );
 
-    const token = jwt.sign(
-      { id: newUser.rows[0].id, username: newUser.rows[0].username },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
-    );
+    const token = crypto.randomBytes(32).toString('hex');
+    await redisClient.set(`session:${token}`, String(newUser.rows[0].id), {
+      EX: 86400, // 24 hours
+    });
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -72,11 +72,10 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
-    );
+    const token = crypto.randomBytes(32).toString('hex');
+    await redisClient.set(`session:${token}`, String(user.id), {
+      EX: 86400, // 24 hours
+    });
 
     res.json({
       message: 'Logged in successfully',
