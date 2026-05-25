@@ -26,6 +26,7 @@ export type Task = {
   due_date: string;
   xp_reward: number;
   status: Status;
+  position?: number;
 };
 
 export type newTask = {
@@ -35,4 +36,5 @@ export type newTask = {
   due_date: string;
   xp_reward: number;
   status: Status;
+  position?: number;
 };
