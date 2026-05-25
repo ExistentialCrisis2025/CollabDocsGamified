@@ -9,7 +9,7 @@ const router = Router();
 router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
-    const { title, description, priority, due_date, xp_reward, status } = req.body;
+    const { title, description, priority, due_date, xp_reward, status, position } = req.body;
 
     if (!title) {
       res.status(400).json({ error: 'Title is required' });
@@ -17,9 +17,9 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
     }
 
     const newTask = await pool.query(
-      `INSERT INTO tasks (user_id, title, description, priority, due_date, xp_reward, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [userId, title, description, priority || 'medium', due_date, xp_reward || 0, status || 'todo']
+      `INSERT INTO tasks (user_id, title, description, priority, due_date, xp_reward, status, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [userId, title, description, priority || 'medium', due_date, xp_reward || 0, status || 'todo', position || 0]
     );
 
     res.status(201).json(newTask.rows[0]);
@@ -34,7 +34,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
   try {
     const userId = (req as any).user.id;
     const tasks = await pool.query(
-      'SELECT * FROM tasks WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM tasks WHERE user_id = $1 ORDER BY position ASC, created_at DESC',
       [userId]
     );
     res.json(tasks.rows);
@@ -70,6 +70,38 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
   } catch (err: any) {
     console.error('[taskRoutes] update error:', err.message);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /tasks/reorder — batch update tasks positions and statuses
+router.patch('/reorder', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  const client = await pool.connect();
+  try {
+    const userId = (req as any).user.id;
+    const { tasks } = req.body; // array of { id, status, position }
+
+    if (!tasks || !Array.isArray(tasks)) {
+      res.status(400).json({ error: 'Tasks array is required' });
+      return;
+    }
+
+    await client.query('BEGIN');
+
+    for (const task of tasks) {
+      await client.query(
+        'UPDATE tasks SET status = $1, position = $2 WHERE id = $3 AND user_id = $4',
+        [task.status, task.position, task.id, userId]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ message: 'Tasks reordered successfully' });
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('[taskRoutes] reorder error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 

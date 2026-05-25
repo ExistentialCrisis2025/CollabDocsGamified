@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     due_date TIMESTAMP WITH TIME ZONE,
     xp_reward INT DEFAULT 0,
     status VARCHAR(50) DEFAULT 'todo',
+    position INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

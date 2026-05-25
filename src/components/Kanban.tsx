@@ -42,9 +42,104 @@ const Kanban = (prop: Props) => {
     )
       return;
 
+    const taskId = Number(draggableId);
+    const oldStatus = source.droppableId as Status;
     const newStatus = destination.droppableId as Status;
 
-    await updateTaskStatus(Number(draggableId), newStatus);
+    // Optimistic reorder
+    let newTasks = [...tasks];
+    
+    // Get all columns sorted by position
+    const colTodo = newTasks.filter(t => t.status === "todo").sort((a,b) => (a.position||0) - (b.position||0));
+    const colInProgress = newTasks.filter(t => t.status === "in-progress").sort((a,b) => (a.position||0) - (b.position||0));
+    const colDone = newTasks.filter(t => t.status === "done").sort((a,b) => (a.position||0) - (b.position||0));
+
+    const cols = {
+      "todo": colTodo,
+      "in-progress": colInProgress,
+      "done": colDone
+    };
+
+    const sourceCol = cols[oldStatus];
+    const destCol = cols[newStatus];
+
+    const sourceIndex = sourceCol.findIndex(t => t.id === taskId);
+    if (sourceIndex === -1) return;
+    
+    const [draggedTask] = sourceCol.splice(sourceIndex, 1);
+    draggedTask.status = newStatus;
+
+    if (oldStatus === newStatus) {
+      sourceCol.splice(destination.index, 0, draggedTask);
+    } else {
+      destCol.splice(destination.index, 0, draggedTask);
+    }
+
+    // Update positions
+    colTodo.forEach((t, i) => t.position = i);
+    colInProgress.forEach((t, i) => t.position = i);
+    colDone.forEach((t, i) => t.position = i);
+
+    const finalTasks = [...colTodo, ...colInProgress, ...colDone];
+    setTasks(finalTasks);
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      // Only if status changed, trigger status logic to award XP
+      if (oldStatus !== newStatus) {
+         await api.patch(
+            `/tasks/${taskId}/status`,
+            { status: newStatus },
+            { headers: { Authorization: `Bearer ${token}` } }
+         );
+         
+         await prop.fetchDashboard();
+         const response = await fetchXP();
+         const newXPData = response?.data;
+
+         if (newStatus === "done") {
+            toast.success(`XP Gained`, {
+              duration: 2200,
+              style: {
+                background: "#27272a",
+                color: "#facc15",
+                border: "1px solid rgba(250, 204, 21, 0.3)",
+                borderRadius: "14px",
+                padding: "14px",
+                fontWeight: "700",
+              },
+            });
+         }
+
+         if (newXPData && newXPData.level > xpData.level) {
+            toast.success(`Level Up! You reached Level ${newXPData.level}`, {
+              duration: 4000,
+              style: {
+                background: "linear-gradient(to right, #facc15, #f97316)",
+                color: "#000",
+                fontWeight: "700",
+                padding: "18px",
+                borderRadius: "18px",
+                boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
+              },
+            });
+         }
+      }
+
+      // Persist the order for everything
+      const payloadTasks = finalTasks.map(t => ({ id: t.id, status: t.status, position: t.position }));
+      await api.patch(
+        "/tasks/reorder",
+        { tasks: payloadTasks },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+    } catch (err) {
+      console.error("Drag and drop failed", err);
+      setTasks(tasks); // revert to original
+      alert("Failed to update task position");
+    }
   };
 
   async function fetchTask() {
@@ -85,9 +180,9 @@ const Kanban = (prop: Props) => {
   }
 
   const columns = {
-    todo: tasks.filter((task) => task.status === "todo"),
-    "in-progress": tasks.filter((task) => task.status === "in-progress"),
-    done: tasks.filter((task) => task.status === "done"),
+    todo: tasks.filter((task) => task.status === "todo").sort((a, b) => (a.position || 0) - (b.position || 0)),
+    "in-progress": tasks.filter((task) => task.status === "in-progress").sort((a, b) => (a.position || 0) - (b.position || 0)),
+    done: tasks.filter((task) => task.status === "done").sort((a, b) => (a.position || 0) - (b.position || 0)),
   };
 
   const addNewTask = async () => {
