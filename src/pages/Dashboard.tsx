@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Kanban from "../components/Kanban";
 import { useState } from "react";
 import api from "../api/axios";
@@ -7,7 +7,7 @@ import type { Task } from "../components/types/types";
 const Dashboard = () => {
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.setItem("authToken", "");
+    localStorage.setItem("token", "");
     navigate("/");
   };
 
@@ -18,7 +18,7 @@ const Dashboard = () => {
     try {
       setDashboardLoading(true);
 
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
 
       const response = await api.get("/users/me/dashboard", {
         headers: {

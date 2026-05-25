@@ -10,10 +10,10 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const authToken = localStorage.getItem("authToken");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (authToken) {
+    if (token) {
       navigate("/dashboard");
     }
   });

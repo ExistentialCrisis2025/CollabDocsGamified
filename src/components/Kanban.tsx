@@ -48,7 +48,7 @@ const Kanban = (prop: Props) => {
   };
 
   async function fetchTask() {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("token");
     console.log(token);
 
     try {
@@ -65,7 +65,7 @@ const Kanban = (prop: Props) => {
 
   async function fetchXP() {
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
 
       const response = await api.get("/users/me/xp", {
         headers: {
@@ -95,7 +95,7 @@ const Kanban = (prop: Props) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
       const response = await api.post(
         "/tasks",
         {
@@ -132,7 +132,7 @@ const Kanban = (prop: Props) => {
 
   const removeTask = async (taskID: number) => {
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
       await api.delete(`/tasks/${taskID}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -163,7 +163,7 @@ const Kanban = (prop: Props) => {
     setTasks(updatedTasks);
 
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
 
       await api.patch(
         `/tasks/${taskID}/status`,

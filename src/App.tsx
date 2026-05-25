@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
 
 import { Routes, Route } from "react-router-dom";
+import Leaderboard from "./pages/Leaderboard";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             </ProtectedRoute>
           }
         ></Route>
+        <Route path="/leaderboard" element={<Leaderboard />}></Route>
       </Routes>
     </div>
   );

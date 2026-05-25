@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const authToken = localStorage.getItem("authToken");
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  if (authToken) {
+  if (token) {
     return children;
   } else {
     return <Navigate to="/" />;

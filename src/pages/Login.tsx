@@ -11,10 +11,10 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
 
-  const authToken = localStorage.getItem("authToken");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (authToken) {
+    if (token) {
       navigate("/dashboard");
     }
   });
@@ -52,7 +52,7 @@ const Login = () => {
       setPassword("");
       setRemember(false);
 
-      localStorage.setItem("authToken", response.data.token);
+      localStorage.setItem("token", response.data.token);
       navigate("/dashboard");
     } catch (error) {
       console.error("Error logging in:", error);
