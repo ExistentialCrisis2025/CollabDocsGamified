@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import pool from '../db';
 import { authenticateToken } from '../middleware/auth';
 import redisClient from '../redisClient';
+import { refreshQuestProgress } from './questRoutes';
 
 const router = Router();
 
@@ -131,7 +132,7 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
     const xpReward = task.xp_reward || 0;
 
     const updatedTask = await pool.query(
-      'UPDATE tasks SET status=$1 WHERE id=$2 AND user_id=$3 RETURNING *',
+      'UPDATE tasks SET status=$1, updated_at=NOW() WHERE id=$2 AND user_id=$3 RETURNING *',
       [status, taskId, userId]
     );
 
@@ -199,6 +200,10 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
       );
       const newLevel = levelRes.rows.length > 0 ? levelRes.rows[0].level : 1;
       await pool.query('UPDATE users SET level = $1 WHERE id = $2', [newLevel, userId]);
+
+      // Refresh quest progress after any XP-awarding task change
+      const today = new Date().toISOString().slice(0, 10);
+      await refreshQuestProgress(userId, today);
     }
 
     res.json(updatedTask.rows[0]);
