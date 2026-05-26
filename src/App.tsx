@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Analytics from "./pages/Analytics";
 import { Toaster } from "react-hot-toast";
 
 import { Routes, Route } from "react-router-dom";
@@ -49,6 +50,7 @@ function App() {
           }
         ></Route>
         <Route path="/leaderboard" element={<Leaderboard />}></Route>
+        <Route path="/Analytics" element={<Analytics />}></Route>
       </Routes>
     </div>
   );

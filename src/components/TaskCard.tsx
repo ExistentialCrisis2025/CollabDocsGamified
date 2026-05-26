@@ -5,8 +5,8 @@ import { Draggable } from "@hello-pangea/dnd";
 
 type prop = {
   task: Task;
-  removeTask: (task_id: number) => void;
-  updateTaskStatus: (task_id: number, task_status: Status) => void;
+  removeTask: (id: number) => void;
+  updateTaskStatus: (id: number, task_status: Status) => void;
   index: number;
 };
 
