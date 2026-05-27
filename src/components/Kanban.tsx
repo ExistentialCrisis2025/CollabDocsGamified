@@ -151,6 +151,12 @@ const Kanban = (prop: Props) => {
           });
         }
 
+        const xpResponse = await fetchXP();
+        const newXPData = xpResponse?.data;
+        if (newXPData) {
+          setXpData(newXPData);
+        }
+
         if (newXPData && newXPData.level > xpData.level) {
           toast.success(`Level Up! You reached Level ${newXPData.level}`, {
             duration: 4000,
@@ -349,34 +355,6 @@ const Kanban = (prop: Props) => {
         },
       );
 
-      setTimeout(async () => {
-        await prop.fetchDashboard();
-
-        const response = await fetchXP();
-
-        const newXPData = response?.data;
-
-        if (newXPData && newXPData.level > xpData.level) {
-          toast.success(`Level Up! You reached Level ${newXPData.level}`, {
-            duration: 4000,
-
-            style: {
-              background: "linear-gradient(to right, #facc15, #f97316)",
-
-              color: "#000",
-
-              fontWeight: "700",
-
-              padding: "18px",
-
-              borderRadius: "18px",
-
-              boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
-            },
-          });
-        }
-      }, 0);
-
       if (taskStatus === "done" && previousStatus !== "done") {
         toast.success(`XP Gained`, {
           duration: 2200,
@@ -392,21 +370,26 @@ const Kanban = (prop: Props) => {
         });
       }
 
+      await prop.fetchDashboard();
+      const response = await fetchXP();
+      const newXPData = response?.data;
       if (newXPData) {
-        if (newXPData.level > previousLevel) {
-          toast.success(`Level Up! You reached Level ${newXPData.level}`, {
-            duration: 4000,
+        setXpData(newXPData);
+      }
 
-            style: {
-              background: "linear-gradient(to right, #facc15, #f97316)",
-              color: "#000",
-              fontWeight: "700",
-              padding: "18px",
-              borderRadius: "18px",
-              boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
-            },
-          });
-        }
+      if (newXPData && newXPData.level > previousLevel) {
+        toast.success(`Level Up! You reached Level ${newXPData.level}`, {
+          duration: 4000,
+
+          style: {
+            background: "linear-gradient(to right, #facc15, #f97316)",
+            color: "#000",
+            fontWeight: "700",
+            padding: "18px",
+            borderRadius: "18px",
+            boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
+          },
+        });
       }
     } catch (error) {
       console.error("Error updating task status:", error);
