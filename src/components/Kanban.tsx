@@ -3,6 +3,8 @@ import type { Priority, Status, Task } from "./types/types";
 import api from "../api/axios";
 import XPBar from "./XPBar";
 import toast from "react-hot-toast";
+import type { Quest } from "./types/quest";
+import PomodoroTimer from "./PomodoroTimer";
 
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -24,6 +26,8 @@ const Kanban = (prop: Props) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const loadRef = useRef(false);
   const [loading, setLoading] = useState(false);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [focusedTask, setFocusedTask] = useState<Task | null>(null);
 
   const [xpData, setXpData] = useState({
     total_xp: 0,
@@ -231,6 +235,23 @@ const Kanban = (prop: Props) => {
     }
   }
 
+  async function fetchQuests() {
+    try {
+      console.log("Hello");
+      const token = localStorage.getItem("token");
+
+      const response = await api.get("/quests/today", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setQuests(response.data.quests);
+    } catch (error) {
+      console.error("Failed to fetch quests due to ", error);
+    }
+  }
+
   const columns = {
     todo: tasks
       .filter((task) => task.status === "todo")
@@ -402,6 +423,7 @@ const Kanban = (prop: Props) => {
 
       fetchTask();
       fetchXP();
+      fetchQuests();
       prop.fetchDashboard();
     }
   }, []);
@@ -557,6 +579,93 @@ const Kanban = (prop: Props) => {
           </div>
         </div>
 
+        <div className="mb-8 rounded-2xl border border-purple-500/30 bg-zinc-900/80 p-6 shadow-xl">
+          <div className="mb-6 flex items-center gap-3">
+            <div
+              className="
+            rounded-xl
+            bg-purple-500/20
+            p-3
+         "
+            >
+              <Trophy className="h-7 w-7 text-purple-400" />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-white">Daily Quests</h2>
+
+              <p className="text-sm text-zinc-400">
+                Bonus challenges for extra XP
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {quests.length > 0 ? (
+              quests.map((quest) => (
+                <div
+                  key={quest.id}
+                  className={`
+                  rounded-xl border p-4
+                  transition-all duration-200
+
+                  ${
+                    quest.completed
+                      ? `
+                           border-green-500/30
+                           bg-green-500/10
+                        `
+                      : `
+                           border-zinc-700
+                           bg-zinc-800/70
+                        `
+                  }
+               `}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-white">{quest.title}</h3>
+
+                      <p className="mt-1 text-sm text-zinc-400">
+                        {quest.description}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <div
+                        className="
+                           rounded-full
+                           bg-purple-500/20
+                           px-3 py-1
+                           text-xs font-bold
+                           text-purple-400
+                        "
+                      >
+                        +{quest.bonus_xp} XP
+                      </div>
+
+                      {quest.completed && (
+                        <div className="mt-2 text-xs font-bold text-green-400">
+                          Completed
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-zinc-500">
+                No quests available today
+              </div>
+            )}
+          </div>
+        </div>
+
+        <PomodoroTimer
+          taskId={focusedTask?.id || null}
+          taskTitle={focusedTask?.title || "Select a task"}
+        />
+
         <div className="mb-8 rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-xl">
           <h2 className="mb-6 text-2xl font-bold text-white">Today's Tasks</h2>
 
@@ -686,6 +795,7 @@ const Kanban = (prop: Props) => {
               title={"todo"}
               tasks={columns.todo}
               updateTaskStatus={updateTaskStatus}
+              setFocusedTask={setFocusedTask}
             />
 
             <KanbanColumn
@@ -693,6 +803,7 @@ const Kanban = (prop: Props) => {
               title={"in-progress"}
               tasks={columns["in-progress"]}
               updateTaskStatus={updateTaskStatus}
+              setFocusedTask={setFocusedTask}
             />
 
             <KanbanColumn
@@ -700,6 +811,7 @@ const Kanban = (prop: Props) => {
               title={"done"}
               tasks={columns.done}
               updateTaskStatus={updateTaskStatus}
+              setFocusedTask={setFocusedTask}
             />
           </div>
         </DragDropContext>

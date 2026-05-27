@@ -9,6 +9,7 @@ type props = {
   tasks: Task[];
   removeTask: (task_id: number) => void;
   updateTaskStatus: (task_id: number, task_status: Status) => void;
+  setFocusedTask: (task:Task) => void;
 };
 
 const KanbanColumn = (Props: props) => {
@@ -67,6 +68,7 @@ const KanbanColumn = (Props: props) => {
                 task={task}
                 updateTaskStatus={Props.updateTaskStatus}
                 index={index}
+                setFocusedTask={Props.setFocusedTask}
               />
             ))}
 
