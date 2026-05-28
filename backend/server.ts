@@ -7,6 +7,7 @@ import taskRoutes  from './routes/taskRoutes';
 import userRoutes  from './routes/userRoutes';
 import leaderboardRoutes from './routes/leaderboardRoutes';
 import questRoutes from './routes/questRoutes';
+import quoteRoutes from './routes/quoteRoutes';
 import { startStreakCron } from './jobs/streakCron';
 import { startQuestCron } from './jobs/questCron';
 
@@ -22,6 +23,7 @@ app.use('/tasks',       taskRoutes);         // CRUD + status patch
 app.use('/users',       userRoutes);         // GET /users/me/xp, /me/streak, /me/dashboard
 app.use('/leaderboard', leaderboardRoutes);  // GET /leaderboard/weekly
 app.use('/quests',      questRoutes);        // GET /quests/today, POST /quests/:id/complete
+app.use('/quotes',      quoteRoutes);        // GET /quotes/random
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'OK' }));
