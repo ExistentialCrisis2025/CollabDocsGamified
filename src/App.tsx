@@ -5,8 +5,13 @@ import "./index.css";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Analytics from "./pages/Analytics";
+import LandingPage from "./pages/LandingPage";
+import KanbanPage from "./pages/KanbanPage";
+import PomodoroPage from "./pages/PomodoroPage";
+import ProfilePage from "./pages/ProfilePage";
 import { Toaster } from "react-hot-toast";
 
 import { Routes, Route } from "react-router-dom";
@@ -41,11 +46,36 @@ function App() {
         <Route path="/" element={<Login />}></Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
+        <Route path="/auth/callback" element={<OAuthCallback />}></Route>
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <LandingPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/kanban"
+          element={
+            <ProtectedRoute>
+              <KanbanPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/pomodoro"
+          element={
+            <ProtectedRoute>
+              <PomodoroPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         ></Route>

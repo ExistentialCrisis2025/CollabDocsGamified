@@ -38,6 +38,11 @@ const Signup = () => {
     navigate("/");
   }
 
+  function handleGoogleLogin() {
+    const baseURL = api.defaults.baseURL || "http://localhost:5000";
+    window.location.href = `${baseURL}/auth/google`;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -74,74 +79,76 @@ const Signup = () => {
   return (
     <AuthLayout>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white">Create Account</h1>
-
-          <p className="text-gray-400 mt-2">Sign up to continue</p>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-indigo-400">
+            Sign Up
+          </p>
+          <h1 className="text-3xl font-bold text-white">Create an account</h1>
+          <p className="text-sm text-slate-400">Join the platform to start managing tasks.</p>
         </div>
 
         <div className="space-y-4">
           <div>
             <label
               htmlFor="uname"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="mb-2 block text-sm font-medium text-slate-300"
             >
               Username
             </label>
 
             <input
               type="text"
-              placeholder="Enter Username"
+              placeholder="Choose a username"
               name="uname"
               required
               onChange={handleUsernameInput}
               value={username}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
             />
           </div>
 
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="mb-2 block text-sm font-medium text-slate-300"
             >
               Email Address
             </label>
 
             <input
               type="email"
-              placeholder="Enter Email"
+              placeholder="name@example.com"
               name="email"
               required
               onChange={handleEmailInput}
               value={email}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
             />
           </div>
 
           <div>
             <label
               htmlFor="psw"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="mb-2 block text-sm font-medium text-slate-300"
             >
               Password
             </label>
 
             <input
               type="password"
-              placeholder="Enter Password"
+              placeholder="Create a password"
               name="psw"
               required
               onChange={handlePasswordInput}
               value={password}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
             />
           </div>
 
           <div>
             <label
               htmlFor="confirmPsw"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="mb-2 block text-sm font-medium text-slate-300"
             >
               Confirm Password
             </label>
@@ -153,27 +160,39 @@ const Signup = () => {
               required
               onChange={handlePasswordConfirmation}
               value={confirmPassword}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold py-3 rounded-lg"
+          className="w-full rounded-xl bg-indigo-500 hover:bg-indigo-600 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
-          Sign Up
+          Sign up
         </button>
 
-        <p className="text-center text-gray-400 text-sm">
+        <div className="border-t border-slate-800 pt-4 text-center text-sm font-medium text-slate-400">
+          Or continue with
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full rounded-xl border border-slate-700 bg-slate-950/60 py-3 text-sm font-semibold text-slate-100 transition hover:border-indigo-400 hover:text-indigo-300"
+        >
+          Continue with Google
+        </button>
+
+        <div className="border-t border-slate-800 pt-4 text-center text-sm text-slate-400">
           Already have an account?{" "}
           <span
             onClick={handleClick}
-            className="text-blue-500 hover:text-blue-400 cursor-pointer"
+            className="cursor-pointer font-semibold text-indigo-400 transition hover:text-indigo-300"
           >
-            Login
+            Log in
           </span>
-        </p>
+        </div>
       </form>
     </AuthLayout>
   );
