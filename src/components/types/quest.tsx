@@ -3,5 +3,7 @@ export type Quest = {
     title: string;
     description: string;
     bonus_xp: number;
-    completed: boolean;
+    current_progress: number;
+    target_value: number;
+    status: 'active' | 'completed' | 'expired';
 };

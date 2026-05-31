@@ -57,6 +57,7 @@ export async function refreshQuestProgress(
 
     switch (quest.quest_type) {
       case 'complete_tasks':
+      case 'complete_tasks_bonus':
         newProgress = tasksCompletedToday;
         break;
       case 'earn_xp':

@@ -412,327 +412,26 @@ const Kanban = (prop: Props) => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
-        <XPBar
-          totalXP={xpData.total_xp}
-          nextLevelXP={xpData.next_level_xp}
-          level={xpData.level}
-        ></XPBar>
-
-        <h1 className="bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500 bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent md:text-6xl">
-          Task Board
-        </h1>
-
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-orange-500/30 bg-zinc-900/80 p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <Flame
-                className={`h-8 w-8 ${
-                  prop.dashboardData?.user?.current_streak > 0
-                    ? "text-orange-500"
-                    : "text-zinc-500"
-                }`}
-              />
-
-              <div>
-                <h2 className="text-lg font-bold text-white">Daily Streak</h2>
-
-                <p className="text-sm text-zinc-400">
-                  Keep completing tasks daily
-                </p>
-              </div>
-            </div>
-
-            <div className="text-4xl font-black text-white">
-              {prop.dashboardData?.user?.current_streak || 0}
-            </div>
-
-            <div className="mt-2 text-sm text-zinc-400">
-              Best:
-              <span className="ml-1 font-semibold text-orange-400">
-                {prop.dashboardData?.user?.longest_streak || 0} days
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-yellow-500/30 bg-zinc-900/80 p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <Star className="h-8 w-8 text-yellow-400" />
-
-              <div>
-                <h2 className="text-lg font-bold text-white">Current Level</h2>
-
-                <p className="text-sm text-zinc-400">Your progression rank</p>
-              </div>
-            </div>
-
-            <div className="text-4xl font-black text-white">
-              {prop.dashboardData?.user?.level || 1}
-            </div>
-
-            <div className="mt-2 text-sm text-zinc-400">
-              Total XP:
-              <span className="ml-1 font-semibold text-yellow-400">
-                {prop.dashboardData?.user?.total_xp || 0}
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-green-500/30 bg-zinc-900/80 p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <Trophy className="h-8 w-8 text-green-400" />
-
-              <div>
-                <h2 className="text-lg font-bold text-white">
-                  Today's Progress
-                </h2>
-
-                <p className="text-sm text-zinc-400">Tasks completed today</p>
-              </div>
-            </div>
-
-            <div className="text-4xl font-black text-white">
-              {prop.dashboardData?.tasks_completed_today || 0}
-            </div>
-
-            <div className="mt-2 text-sm text-zinc-400">
-              {prop.dashboardData?.completed_today
-                ? "🔥 Streak maintained"
-                : "Complete a task today"}
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h1 className="text-4xl font-black text-white">
-            Welcome back,
-            <span className="ml-2 bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              {prop.dashboardData?.user?.username || "User"} 👋
-            </span>
-          </h1>
-
-          <p className="mt-2 text-zinc-400">
-            Stay productive and keep your streak alive.
-          </p>
-        </div>
-
-        <div className="mb-8 rounded-2xl border border-yellow-500/20 bg-zinc-900/80 p-6 shadow-xl">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">XP Progress</h2>
-
-            <span className="text-sm font-semibold text-yellow-400">
-              Level {prop.dashboardData?.user?.level || 1}
-            </span>
-          </div>
-
-          <div className="h-5 w-full overflow-hidden rounded-full bg-zinc-700">
-            <div
-              className="
-            h-full rounded-full
-            bg-linear-to-r
-            from-yellow-400
-            via-orange-500
-            to-rose-500
-
-            transition-all
-            duration-700
-            ease-out
-
-            shadow-[0_0_20px_rgba(249,115,22,0.5)]
-         "
-              style={{
-                width: `${
-                  prop.dashboardData?.user?.next_level_xp
-                    ? (prop.dashboardData.user.total_xp /
-                        prop.dashboardData.user.next_level_xp) *
-                      100
-                    : 100
-                }%`,
-              }}
-            ></div>
-          </div>
-
-          <div className="mt-3 flex justify-between text-sm text-zinc-400">
-            <span>{prop.dashboardData?.user?.total_xp || 0} XP</span>
-
-            <span>
-              Next Level: {prop.dashboardData?.user?.next_level_xp || "MAX"}
-            </span>
-          </div>
-        </div>
-
-        <div className="mb-8 rounded-2xl border border-purple-500/30 bg-zinc-900/80 p-6 shadow-xl">
-          <div className="mb-6 flex items-center gap-3">
-            <div
-              className="
-            rounded-xl
-            bg-purple-500/20
-            p-3
-         "
-            >
-              <Trophy className="h-7 w-7 text-purple-400" />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-white">Daily Quests</h2>
-
-              <p className="text-sm text-zinc-400">
-                Bonus challenges for extra XP
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {quests.length > 0 ? (
-              quests.map((quest) => (
-                <div
-                  key={quest.id}
-                  className={`
-                  rounded-xl border p-4
-                  transition-all duration-200
-
-                  ${
-                    quest.completed
-                      ? `
-                           border-green-500/30
-                           bg-green-500/10
-                        `
-                      : `
-                           border-zinc-700
-                           bg-zinc-800/70
-                        `
-                  }
-               `}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-white">{quest.title}</h3>
-
-                      <p className="mt-1 text-sm text-zinc-400">
-                        {quest.description}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <div
-                        className="
-                           rounded-full
-                           bg-purple-500/20
-                           px-3 py-1
-                           text-xs font-bold
-                           text-purple-400
-                        "
-                      >
-                        +{quest.bonus_xp} XP
-                      </div>
-
-                      {quest.completed && (
-                        <div className="mt-2 text-xs font-bold text-green-400">
-                          Completed
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-zinc-500">
-                No quests available today
-              </div>
-            )}
-          </div>
-        </div>
-
-        <PomodoroTimer
-          taskId={focusedTask?.id || null}
-          taskTitle={focusedTask?.title || "Select a task"}
-        />
-
-        <div className="mb-8 rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-xl">
-          <h2 className="mb-6 text-2xl font-bold text-white">Today's Tasks</h2>
-
-          <div className="space-y-4">
-            {prop.remainingTasks.length > 0 ? (
-              prop.remainingTasks.map((task: any) => (
-                <div
-                  key={task.id}
-                  className="
-                  rounded-xl border border-zinc-700
-                  bg-zinc-800/70
-                  p-4 transition-all
-               "
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-white">{task.title}</h3>
-
-                      <p className="mt-1 text-sm text-zinc-400">
-                        {task.description || "No description"}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <div
-                        className="
-                           rounded-full
-                           bg-yellow-500/20
-                           px-3 py-1
-                           text-xs font-bold
-                           text-yellow-400
-                        "
-                      >
-                        {task.status}
-                      </div>
-
-                      <div className="mt-2 text-sm text-zinc-400">
-                        ⚡ {task.xp_reward} XP
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div
-                className="
-               rounded-xl border border-dashed
-               border-green-500/40
-               bg-green-500/5
-               p-8 text-center
-            "
-              >
-                <div className="mb-3 text-5xl">🎉</div>
-
-                <h3 className="text-xl font-bold text-white">
-                  No tasks remaining today!
-                </h3>
-
-                <p className="mt-2 text-zinc-400">
-                  You've completed everything for today.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 shadow-2xl">
-          <h2 className="mb-6 text-2xl font-bold text-white">
+    <div className="w-full">
+      <div className="mx-auto flex flex-col gap-8">
+        <div className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 p-6 shadow-2xl transition-colors">
+          <h2 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
             Create New Task
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <input
               type="text"
               placeholder="Task Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-800 dark:text-slate-100 outline-none transition focus:border-indigo-400 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
 
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
-              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-800 dark:text-slate-100 outline-none transition focus:border-indigo-400"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -743,14 +442,15 @@ const Kanban = (prop: Props) => {
               placeholder="Task Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-120px rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400 md:col-span-2"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-800 dark:text-slate-100 outline-none transition focus:border-indigo-400 md:col-span-2 lg:col-span-2 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              rows={1}
             />
 
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-800 dark:text-slate-100 outline-none transition focus:border-indigo-400"
             />
 
             <input
@@ -758,44 +458,32 @@ const Kanban = (prop: Props) => {
               placeholder="XP Reward"
               value={xpReward}
               onChange={(e) => setXpReward(Number(e.target.value))}
-              className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 text-white outline-none transition focus:border-yellow-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-800 dark:text-slate-100 outline-none transition focus:border-indigo-400 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
-          </div>
 
-          <button
-            onClick={addNewTask}
-            className={`mt-6 w-full rounded-xl bg-linear-to-r from-yellow-500 to-orange-500 px-4 py-3 font-bold text-black transition-all ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.01]"}`}
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Add Task"}
-          </button>
+            <button
+              onClick={addNewTask}
+              className={`w-full rounded-xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-4 py-3 font-bold text-white shadow-lg transition-transform md:col-span-2 ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.02]"}`}
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "+ Add Task"}
+            </button>
+          </div>
         </div>
 
         <DragDropContext onDragEnd={handleOnDragEnd}>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <KanbanColumn
-              removeTask={removeTask}
-              title={"todo"}
-              tasks={columns.todo}
-              updateTaskStatus={updateTaskStatus}
-              setFocusedTask={setFocusedTask}
-            />
-
-            <KanbanColumn
-              removeTask={removeTask}
-              title={"in-progress"}
-              tasks={columns["in-progress"]}
-              updateTaskStatus={updateTaskStatus}
-              setFocusedTask={setFocusedTask}
-            />
-
-            <KanbanColumn
-              removeTask={removeTask}
-              title={"done"}
-              tasks={columns.done}
-              updateTaskStatus={updateTaskStatus}
-              setFocusedTask={setFocusedTask}
-            />
+            {Object.entries(columns).map(([stat, items]) => (
+              <KanbanColumn
+                key={stat}
+                tasks={items}
+                status={stat as Status}
+                title={stat}
+                removeTask={removeTask}
+                updateTaskStatus={updateTaskStatus}
+                setFocusedTask={setFocusedTask}
+              />
+            ))}
           </div>
         </DragDropContext>
       </div>
