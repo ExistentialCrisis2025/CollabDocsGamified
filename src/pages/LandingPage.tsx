@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../api/axios";
 import TopBar from "../components/TopBar";
-import { Timer, LayoutDashboard, UserCircle, LogOut } from "lucide-react";
+import { Timer, LayoutDashboard, Trophy, BarChart3, LogOut } from "lucide-react";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -87,10 +87,13 @@ const LandingPage = () => {
         </motion.div>
 
         <motion.div variants={itemVariants} className="mb-12 text-center">
-          <h1 className="text-5xl font-black text-slate-900 dark:text-white">
-            Welcome back,
-            <span className="ml-3 bg-gradient-to-r from-indigo-500 to-emerald-400 bg-clip-text text-transparent">
-              {dashboardData?.user?.username || "User"} 👋
+          <h1 className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-5xl font-black text-slate-900 dark:text-white">
+            <span>Welcome back,</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="bg-gradient-to-r from-indigo-500 to-emerald-400 bg-clip-text text-transparent">
+                {dashboardData?.user?.username || "User"}
+              </span>
+              <span aria-hidden="true">👋</span>
             </span>
           </h1>
           <p className="mt-4 text-slate-500 dark:text-slate-400">
@@ -99,28 +102,44 @@ const LandingPage = () => {
         </motion.div>
 
         <motion.div variants={itemVariants} className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Link to="/kanban" className="group relative overflow-hidden rounded-3xl bg-indigo-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
+          <Link to="/kanban" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-indigo-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
             <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
               <LayoutDashboard className="h-16 w-16 text-white" />
             </div>
-            <h2 className="relative z-10 text-2xl font-bold text-white">Board & Tasks</h2>
-            <p className="relative z-10 mt-2 text-indigo-100">Manage your tasks and earn XP.</p>
+            <div className="relative z-10 pr-16">
+              <h2 className="text-2xl font-bold text-white leading-snug">Board & Tasks</h2>
+              <p className="mt-2 text-indigo-100">Manage your tasks and earn XP.</p>
+            </div>
           </Link>
 
-          <Link to="/pomodoro" className="group relative overflow-hidden rounded-3xl bg-emerald-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
+          <Link to="/pomodoro" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-emerald-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
             <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
               <Timer className="h-16 w-16 text-white" />
             </div>
-            <h2 className="relative z-10 text-2xl font-bold text-white">Pomodoro</h2>
-            <p className="relative z-10 mt-2 text-emerald-100">Focus sessions and timed breaks.</p>
+            <div className="relative z-10 pr-16">
+              <h2 className="text-2xl font-bold text-white leading-snug">Pomodoro</h2>
+              <p className="mt-2 text-emerald-100">Focus sessions and timed breaks.</p>
+            </div>
           </Link>
 
-          <Link to="/profile" className="group relative overflow-hidden rounded-3xl bg-slate-800 p-8 shadow-2xl transition hover:scale-105 active:scale-95 dark:bg-slate-700">
-            <div className="absolute -right-6 -top-6 rounded-full bg-white/10 p-8">
-              <UserCircle className="h-16 w-16 text-white" />
+          <Link to="/Analytics" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-sky-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
+            <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
+              <BarChart3 className="h-16 w-16 text-white" />
             </div>
-            <h2 className="relative z-10 text-2xl font-bold text-white">Profile</h2>
-            <p className="relative z-10 mt-2 text-slate-300">View XP, Quests and Stats.</p>
+            <div className="relative z-10 pr-16">
+              <h2 className="text-2xl font-bold text-white leading-snug">Analytics</h2>
+              <p className="mt-2 text-sky-100">Trends, productivity, and progress.</p>
+            </div>
+          </Link>
+
+          <Link to="/leaderboard" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-amber-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95 md:col-start-1 md:row-start-2">
+            <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
+              <Trophy className="h-16 w-16 text-white" />
+            </div>
+            <div className="relative z-10 pr-16">
+              <h2 className="text-2xl font-bold text-white leading-snug break-words">Leaderboard</h2>
+              <p className="mt-2 text-amber-100">See weekly top performers.</p>
+            </div>
           </Link>
         </motion.div>
 
@@ -137,8 +156,8 @@ const LandingPage = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{task.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{task.description}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
                         task.priority === 'high' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400' :
                         task.priority === 'medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400' :
@@ -150,7 +169,7 @@ const LandingPage = () => {
                         ⭐ {task.xp_reward || 0} XP
                       </span>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider sm:ml-auto ${
                       task.status === 'done' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' :
                       task.status === 'in_progress' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' :
                       'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'

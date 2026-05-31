@@ -70,10 +70,10 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
-            Access Console
+            Log In
           </p>
-          <h1 className="text-3xl font-black text-white">Welcome back, Commander</h1>
-          <p className="text-sm text-slate-400">The fleet awaits your next directive.</p>
+          <h1 className="text-3xl font-black text-white">Welcome back</h1>
+          <p className="text-sm text-slate-400">Log in to your account.</p>
         </div>
 
         <div className="space-y-4">
@@ -82,12 +82,12 @@ const Login = () => {
               htmlFor="email"
               className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80"
             >
-              Email Identity
+              Email Address
             </label>
 
             <input
               type="email"
-              placeholder="commander@collabdocs.com"
+              placeholder="name@example.com"
               name="email"
               required
               onChange={handleEmailInput}
@@ -101,12 +101,12 @@ const Login = () => {
               htmlFor="psw"
               className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80"
             >
-              Access Key
+              Password
             </label>
 
             <input
               type="password"
-              placeholder="Enter secure passphrase"
+              placeholder="Enter your password"
               name="psw"
               required
               onChange={handlePasswordInput}
@@ -125,13 +125,13 @@ const Login = () => {
               onChange={handleRemember}
               className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
             />
-            Maintain persistent connection
+            Remember me
           </label>
           <button
             type="button"
             className="text-cyan-400 transition hover:text-cyan-300"
           >
-            Forgot access?
+            Forgot password?
           </button>
         </div>
 
@@ -139,11 +139,11 @@ const Login = () => {
           type="submit"
           className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 py-3 font-semibold text-slate-900 shadow-lg shadow-cyan-500/30 transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
-          Initiate Session
+          Log in
         </button>
 
         <div className="border-t border-slate-800 pt-4 text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
-          External uplinks
+          Or continue with
         </div>
 
         <button
@@ -155,12 +155,12 @@ const Login = () => {
         </button>
 
         <div className="border-t border-slate-800 pt-4 text-center text-sm text-slate-400">
-          New recruit?{" "}
+          Don't have an account?{" "}
           <span
             onClick={handleClick}
             className="cursor-pointer font-semibold text-cyan-400 transition hover:text-cyan-300"
           >
-            Apply for Command
+            Sign up
           </span>
         </div>
       </form>
