@@ -3,6 +3,7 @@ import pool from '../db';
 import { authenticateToken } from '../middleware/auth';
 import redisClient from '../redisClient';
 import { refreshQuestProgress } from './questRoutes';
+import { evaluateBadges } from '../services/evaluateBadges';
 
 const router = Router();
 
@@ -137,6 +138,7 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
     );
 
     let xpAssigned = 0;
+    let unlockedBadges = [];
 
     if (oldStatus !== 'done' && status === 'done') {
       xpAssigned = xpReward;
@@ -204,9 +206,14 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
       // Refresh quest progress after any XP-awarding task change
       const today = new Date().toISOString().slice(0, 10);
       await refreshQuestProgress(userId, today);
+      unlockedBadges = await evaluateBadges(userId);
     }
 
-    res.json(updatedTask.rows[0]);
+    res.json({
+      task:updatedTask.rows[0],
+      xpAssigned,
+      unlockedBadges
+    });
   } catch (err: any) {
     console.error('[taskRoutes] status update error:', err.message);
     res.status(500).json({ error: 'Server error' });
