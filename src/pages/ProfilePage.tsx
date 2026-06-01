@@ -10,12 +10,26 @@ import { toast } from "react-hot-toast";
 const ProfilePage = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
+  const [badges, setBadges] = useState<any[]>([]);
   const [claiming, setClaiming] = useState<number | null>(null);
 
   useEffect(() => {
     fetchDashboard();
     fetchQuests();
+    fetchBadges();
   }, []);
+
+  async function fetchBadges() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await api.get("/badges/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBadges(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch badges", error);
+    }
+  }
 
   async function fetchDashboard() {
     try {
@@ -131,6 +145,63 @@ const ProfilePage = () => {
                   ></div>
                 </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* EARNED BADGES */}
+        <motion.div variants={itemVariants} className="mb-8 rounded-3xl border border-indigo-200/50 dark:border-indigo-500/30 bg-white dark:bg-slate-800 p-8 shadow-xl">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-xl bg-orange-100 p-3 dark:bg-orange-500/20">
+              <Trophy className="h-7 w-7 text-orange-500 dark:text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Earned Badges</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Achievements you've unlocked</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {badges.length > 0 ? (
+              badges.map((badge) => {
+                const rarityColors: Record<string, string> = {
+                  common: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 text-slate-500",
+                  rare: "border-blue-300 bg-blue-50 dark:border-blue-600/50 dark:bg-blue-900/30 text-blue-500",
+                  epic: "border-purple-300 bg-purple-50 dark:border-purple-500/40 dark:bg-purple-900/40 text-purple-500",
+                  legendary: "border-orange-300 bg-orange-50 dark:border-orange-500/50 dark:bg-orange-900/50 text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]",
+                };
+                const rarityGradients: Record<string, string> = {
+                  common: "from-slate-400 to-slate-500",
+                  rare: "from-blue-400 to-blue-500",
+                  epic: "from-purple-400 to-purple-500",
+                  legendary: "from-amber-400 to-orange-500",
+                };
+
+                const cardStyle = rarityColors[badge.rarity] || rarityColors.common;
+                const iconGradient = rarityGradients[badge.rarity] || rarityGradients.common;
+
+                return (
+                  <div
+                    key={badge.id}
+                    className={`flex flex-col items-center p-5 rounded-2xl border text-center transition-transform hover:scale-105 ${cardStyle}`}
+                  >
+                    <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${iconGradient} flex items-center justify-center mb-3 shadow-lg`}>
+                      <Trophy className="w-8 h-8 text-white drop-shadow-md" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white capitalize text-sm mb-1">{badge.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2rem]">
+                      {badge.description}
+                    </p>
+                    <div className="mt-3 text-[10px] font-bold uppercase tracking-wider opacity-70">
+                      {badge.rarity}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="col-span-full text-center text-slate-500 dark:text-slate-400 py-6">
+                No badges earned yet. Keep completing tasks to unlock them!
+              </div>
+            )}
           </div>
         </motion.div>
 

@@ -5,6 +5,8 @@ import XPBar from "./XPBar";
 import toast from "react-hot-toast";
 import type { Quest } from "./types/quest";
 import PomodoroTimer from "./PomodoroTimer";
+import LevelUpOverlay from "./LevelUpOverlay";
+import { AnimatePresence } from "framer-motion";
 
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -28,6 +30,8 @@ const Kanban = (prop: Props) => {
   const [loading, setLoading] = useState(false);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [focusedTask, setFocusedTask] = useState<Task | null>(null);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(1);
 
   const [xpData, setXpData] = useState({
     total_xp: 0,
@@ -345,7 +349,7 @@ const Kanban = (prop: Props) => {
     try {
       const token = localStorage.getItem("token");
 
-      await api.patch(
+      const patchResponse = await api.patch(
         `/tasks/${taskID}/status`,
         { status: taskStatus },
         {
@@ -354,6 +358,8 @@ const Kanban = (prop: Props) => {
           },
         },
       );
+
+      const { unlockedBadges } = patchResponse.data || {};
 
       if (taskStatus === "done" && previousStatus !== "done") {
         toast.success(`XP Gained`, {
@@ -368,6 +374,23 @@ const Kanban = (prop: Props) => {
             fontWeight: "700",
           },
         });
+
+        if (unlockedBadges && unlockedBadges.length > 0) {
+          unlockedBadges.forEach((badge: any) => {
+            toast.success(`Badge Unlocked: ${badge.name}!`, {
+              icon: '🏅',
+              duration: 5000,
+              style: {
+                background: "#27272a",
+                color: "#10b981",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                borderRadius: "14px",
+                padding: "14px",
+                fontWeight: "700",
+              },
+            });
+          });
+        }
       }
 
       await prop.fetchDashboard();
@@ -378,18 +401,8 @@ const Kanban = (prop: Props) => {
       }
 
       if (newXPData && newXPData.level > previousLevel) {
-        toast.success(`Level Up! You reached Level ${newXPData.level}`, {
-          duration: 4000,
-
-          style: {
-            background: "linear-gradient(to right, #facc15, #f97316)",
-            color: "#000",
-            fontWeight: "700",
-            padding: "18px",
-            borderRadius: "18px",
-            boxShadow: "0 12px 40px rgba(249, 115, 22, 0.4)",
-          },
-        });
+        setNewLevel(newXPData.level);
+        setShowLevelUp(true);
       }
     } catch (error) {
       console.error("Error updating task status:", error);
@@ -413,6 +426,15 @@ const Kanban = (prop: Props) => {
 
   return (
     <div className="w-full">
+      <AnimatePresence>
+        {showLevelUp && (
+          <LevelUpOverlay 
+            level={newLevel} 
+            onClose={() => setShowLevelUp(false)} 
+          />
+        )}
+      </AnimatePresence>
+
       <div className="mx-auto flex flex-col gap-8">
         <div className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 p-6 shadow-2xl transition-colors">
           <h2 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
