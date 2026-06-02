@@ -11,7 +11,7 @@ import quoteRoutes from './routes/quoteRoutes';
 import { startStreakCron } from './jobs/streakCron';
 import { startQuestCron } from './jobs/questCron';
 import badgeRoutes from './routes/badgeRoutes';
-
+import analyticsRoutes from './routes/analyticsRoute'
 dotenv.config();
 
 const app = express();
@@ -26,6 +26,7 @@ app.use('/users',       userRoutes);         // GET /users/me/xp, /me/streak, /m
 app.use('/leaderboard', leaderboardRoutes);  // GET /leaderboard/weekly
 app.use('/quests',      questRoutes);        // GET /quests/today, POST /quests/:id/complete
 app.use('/quotes',      quoteRoutes);        // GET /quotes/random
+app.use('/analytics',analyticsRoutes)
 
 app.use('/badges',badgeRoutes);
 // ── Health check ──────────────────────────────────────────────────────────────

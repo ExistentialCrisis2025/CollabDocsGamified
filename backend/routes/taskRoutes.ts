@@ -174,6 +174,7 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
            WHERE id = $1`,
           [userId]
         );
+        
       }
     } else if (oldStatus === 'done' && status !== 'done') {
       xpAssigned = -xpReward;
@@ -189,6 +190,24 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
         [xpAssigned, userId]
       );
       const newTotalXp = userRes.rows[0].total_xp;
+
+      await pool.query(
+          `
+          INSERT INTO xp_history
+          (
+              user_id,
+              xp_amount,
+              total_xp_after
+          )
+          VALUES
+          ($1,$2,$3)
+          `,
+          [
+              userId,
+              xpAssigned,
+              newTotalXp
+          ]
+        );
 
       // Update Redis Leaderboard (Sorted Set)
       await redisClient.zAdd('leaderboard_weekly', {

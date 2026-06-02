@@ -11,6 +11,8 @@ import {
   Legend,
 } from "chart.js";
 
+import api from "../api/axios";
+
 import { Bar, Line } from "react-chartjs-2";
 
 import { BarChart3, TrendingUp, Activity } from "lucide-react";
@@ -42,30 +44,33 @@ const Analytics = () => {
 
   const [xpAnalytics, setXPAnalytics] = useState<XPAnalytics[]>([]);
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     async function loadAnalytics() {
       try {
         setLoading(true);
 
-        setTaskAnalytics([
-          { date: "Mon", tasks: 4 },
-          { date: "Tue", tasks: 7 },
-          { date: "Wed", tasks: 5 },
-          { date: "Thu", tasks: 8 },
-          { date: "Fri", tasks: 6 },
-          { date: "Sat", tasks: 3 },
-          { date: "Sun", tasks: 9 },
-        ]);
+        const response = await api.get("/analytics/overview", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        setXPAnalytics([
-          { date: "Mon", xp: 50 },
-          { date: "Tue", xp: 120 },
-          { date: "Wed", xp: 180 },
-          { date: "Thu", xp: 260 },
-          { date: "Fri", xp: 340 },
-          { date: "Sat", xp: 390 },
-          { date: "Sun", xp: 470 },
-        ]);
+        const taskData = response.data.tasksPerDay.map((item: any) => ({
+          date: new Date(item.completion_date).toLocaleDateString(),
+
+          tasks: Number(item.tasks_completed),
+        }));
+
+        const xpData = response.data.xpOverTime.map((item: any) => ({
+          date: new Date(item.day).toLocaleDateString(),
+
+          xp: Number(item.total_xp),
+        }));
+
+        setTaskAnalytics(taskData);
+        setXPAnalytics(xpData);
       } catch (error) {
         console.error(error);
       } finally {
@@ -214,7 +219,11 @@ const Analytics = () => {
           </div>
 
           <div className="text-4xl font-black text-white">
-            {taskAnalytics.reduce((sum, entry) => sum + entry.tasks, 0)}
+            {taskAnalytics.length > 0
+              ? taskAnalytics.reduce((max, entry) =>
+                  entry.tasks > max.tasks ? entry : max,
+                ).date
+              : "N/A"}
           </div>
         </div>
 
