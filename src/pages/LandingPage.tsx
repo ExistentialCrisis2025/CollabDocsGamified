@@ -3,11 +3,36 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../api/axios";
 import TopBar from "../components/TopBar";
+import AIReportCard from "../components/AIReportCard";
+import { fetchReportHistory } from "../api/reports";
+import type { AIWeeklyReport } from "../components/types/report";
+import { shouldShowDashboardReport } from "../components/types/report";
 import { Timer, LayoutDashboard, Trophy, BarChart3, LogOut } from "lucide-react";
+
+type DashboardTask = {
+  id: number | string;
+  title: string;
+  description?: string;
+  priority?: "high" | "medium" | "low" | string;
+  xp_reward?: number;
+  status?: "todo" | "in_progress" | "done" | string;
+};
+
+type DashboardData = {
+  completed_today?: boolean;
+  tasks_completed_today?: number;
+  todays_tasks?: DashboardTask[];
+  user?: {
+    username?: string;
+    current_streak?: number;
+    longest_streak?: number;
+  };
+};
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [latestReport, setLatestReport] = useState<AIWeeklyReport | null>(null);
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -21,7 +46,18 @@ const LandingPage = () => {
         console.error(error);
       }
     }
+
+    async function fetchReports() {
+      try {
+        const reports = await fetchReportHistory();
+        setLatestReport(reports[0] || null);
+      } catch (error) {
+        console.error("Failed to fetch AI reports", error);
+      }
+    }
+
     fetchDashboard();
+    fetchReports();
   }, []);
 
   const handleLogout = () => {
@@ -101,6 +137,12 @@ const LandingPage = () => {
           </p>
         </motion.div>
 
+        {latestReport && shouldShowDashboardReport(latestReport) && (
+          <motion.div variants={itemVariants} className="mb-12">
+            <AIReportCard report={latestReport} />
+          </motion.div>
+        )}
+
         <motion.div variants={itemVariants} className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Link to="/kanban" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-indigo-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
             <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
@@ -150,7 +192,7 @@ const LandingPage = () => {
             <p className="text-slate-500 dark:text-slate-400">No tasks for today. You're all caught up!</p>
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {dashboardData.todays_tasks.map((task: any) => (
+              {dashboardData.todays_tasks.map((task: DashboardTask) => (
                 <div key={task.id} className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-700/50 dark:bg-slate-800/50 transition hover:border-indigo-300 dark:hover:border-indigo-500/50">
                   <div className="mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{task.title}</h3>

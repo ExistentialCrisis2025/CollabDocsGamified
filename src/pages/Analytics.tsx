@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,13 +10,14 @@ import {
   LineElement,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
-
-import api from "../api/axios";
-
 import { Bar, Line } from "react-chartjs-2";
-
-import { BarChart3, TrendingUp, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+import api from "../api/axios";
+import TopBar from "../components/TopBar";
+import { useThemeStore } from "../store/themeStore";
+import { Activity, ArrowLeft, BarChart3, CalendarCheck2, TrendingUp } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -25,6 +27,7 @@ ChartJS.register(
   LineElement,
   Tooltip,
   Legend,
+  Filler,
 );
 
 type TaskAnalytics = {
@@ -37,35 +40,78 @@ type XPAnalytics = {
   xp: number;
 };
 
+type RawTaskAnalytics = {
+  completion_date: string;
+  tasks_completed: string | number;
+};
+
+type RawXPAnalytics = {
+  day: string;
+  total_xp: string | number;
+};
+
+type AnalyticsResponse = {
+  tasksPerDay?: RawTaskAnalytics[];
+  xpOverTime?: RawXPAnalytics[];
+};
+
+const StatCard = ({
+  icon,
+  label,
+  value,
+  caption,
+  tone,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | number;
+  caption: string;
+  tone: "indigo" | "emerald" | "amber";
+}) => {
+  const tones = {
+    indigo: "border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+    amber: "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+  };
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-5 flex items-center gap-3">
+        <div className={`rounded-xl border p-3 ${tones[tone]}`}>{icon}</div>
+        <div>
+          <h2 className="font-black text-slate-900 dark:text-white">{label}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{caption}</p>
+        </div>
+      </div>
+      <div className="break-words text-4xl font-black text-slate-950 dark:text-white">
+        {value}
+      </div>
+    </div>
+  );
+};
+
 const Analytics = () => {
+  const { isDark } = useThemeStore();
   const [loading, setLoading] = useState(true);
-
   const [taskAnalytics, setTaskAnalytics] = useState<TaskAnalytics[]>([]);
-
   const [xpAnalytics, setXPAnalytics] = useState<XPAnalytics[]>([]);
-
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     async function loadAnalytics() {
       try {
         setLoading(true);
-
-        const response = await api.get("/analytics/overview", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const token = localStorage.getItem("token");
+        const response = await api.get<AnalyticsResponse>("/analytics/overview", {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        const taskData = response.data.tasksPerDay.map((item: any) => ({
+        const taskData = (response.data.tasksPerDay || []).map((item) => ({
           date: new Date(item.completion_date).toLocaleDateString(),
-
           tasks: Number(item.tasks_completed),
         }));
 
-        const xpData = response.data.xpOverTime.map((item: any) => ({
+        const xpData = (response.data.xpOverTime || []).map((item) => ({
           date: new Date(item.day).toLocaleDateString(),
-
           xp: Number(item.total_xp),
         }));
 
@@ -81,259 +127,190 @@ const Analytics = () => {
     loadAnalytics();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
-        Loading analytics...
-      </div>
-    );
-  }
+  const totalTasks = taskAnalytics.reduce((sum, entry) => sum + entry.tasks, 0);
+  const totalXp = xpAnalytics.reduce((sum, entry) => sum + entry.xp, 0);
+  const mostActiveDay =
+    taskAnalytics.length > 0
+      ? taskAnalytics.reduce((max, entry) =>
+          entry.tasks > max.tasks ? entry : max,
+        ).date
+      : "N/A";
+
+  const chartTextColor = isDark ? "#e2e8f0" : "#475569";
+  const chartGridColor = isDark
+    ? "rgba(148, 163, 184, 0.14)"
+    : "rgba(100, 116, 139, 0.16)";
+
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: chartTextColor,
+            font: {
+              size: 13,
+              weight: "bold" as const,
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: chartTextColor },
+          grid: { color: chartGridColor },
+        },
+        y: {
+          ticks: { color: chartTextColor },
+          grid: { color: chartGridColor },
+        },
+      },
+    }),
+    [chartGridColor, chartTextColor],
+  );
 
   const taskChartData = {
     labels: taskAnalytics.map((entry) => entry.date),
-
     datasets: [
       {
         label: "Tasks Completed",
-
         data: taskAnalytics.map((entry) => entry.tasks),
-
-        backgroundColor: "rgba(250, 204, 21, 0.7)",
-
-        borderRadius: 12,
+        backgroundColor: "rgba(99, 102, 241, 0.78)",
+        borderRadius: 10,
       },
     ],
   };
 
   const xpChartData = {
     labels: xpAnalytics.map((entry) => entry.date),
-
     datasets: [
       {
         label: "XP Over Time",
-
         data: xpAnalytics.map((entry) => entry.xp),
-
-        borderColor: "rgba(249, 115, 22, 1)",
-
-        backgroundColor: "rgba(249, 115, 22, 0.2)",
-
+        borderColor: "rgba(16, 185, 129, 1)",
+        backgroundColor: "rgba(16, 185, 129, 0.15)",
         tension: 0.4,
-
         fill: true,
-
-        pointBackgroundColor: "rgba(249, 115, 22, 1)",
-
-        pointBorderColor: "#fff",
-
+        pointBackgroundColor: "rgba(16, 185, 129, 1)",
+        pointBorderColor: isDark ? "#0f172a" : "#ffffff",
         pointRadius: 5,
       },
     ],
   };
 
-  const chartOptions = {
-    responsive: true,
-
-    plugins: {
-      legend: {
-        labels: {
-          color: "white",
-          font: {
-            size: 14,
-            weight: "bold" as const,
-          },
-        },
-      },
-    },
-
-    scales: {
-      x: {
-        ticks: {
-          color: "white",
-        },
-
-        grid: {
-          color: "rgba(255,255,255,0.05)",
-        },
-      },
-
-      y: {
-        ticks: {
-          color: "white",
-        },
-
-        grid: {
-          color: "rgba(255,255,255,0.05)",
-        },
-      },
-    },
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-950 px-6 py-10">
-      <div className="mb-10">
-        <h1
-          className="
-                  bg-linear-to-r
-                  from-yellow-400
-                  to-orange-500
-                  bg-clip-text
-                  text-5xl
-                  font-black
-                  text-transparent
-               "
+    <div className="min-h-screen bg-slate-50 text-slate-800 transition-colors dark:bg-slate-900 dark:text-slate-100">
+      <TopBar />
+
+      <motion.main
+        className="mx-auto max-w-6xl p-6 pt-12"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <Link
+          to="/dashboard"
+          className="mb-8 flex w-max items-center gap-2 font-bold text-indigo-500 transition hover:text-indigo-600 dark:text-indigo-300"
         >
-          Productivity Analytics
-        </h1>
+          <ArrowLeft className="h-5 w-5" />
+          Back to Dashboard
+        </Link>
 
-        <p className="mt-3 text-zinc-400">
-          Track your progress and productivity trends.
-        </p>
-      </div>
-
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div
-          className="
-                  rounded-2xl
-                  border border-yellow-500/30
-                  bg-zinc-900/80
-                  p-6 shadow-xl
-               "
-        >
-          <div className="mb-4 flex items-center gap-3">
-            <div
-              className="
-                        rounded-xl
-                        bg-yellow-500/20
-                        p-3
-                     "
-            >
-              <BarChart3 className="h-7 w-7 text-yellow-400" />
-            </div>
-
+        <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white">Tasks Completed</h2>
-
-              <p className="text-sm text-zinc-400">This week</p>
-            </div>
-          </div>
-
-          <div className="text-4xl font-black text-white">
-            {taskAnalytics.length > 0
-              ? taskAnalytics.reduce((max, entry) =>
-                  entry.tasks > max.tasks ? entry : max,
-                ).date
-              : "N/A"}
-          </div>
-        </div>
-
-        <div
-          className="
-                  rounded-2xl
-                  border border-orange-500/30
-                  bg-zinc-900/80
-                  p-6 shadow-xl
-               "
-        >
-          <div className="mb-4 flex items-center gap-3">
-            <div
-              className="
-                        rounded-xl
-                        bg-orange-500/20
-                        p-3
-                     "
-            >
-              <TrendingUp className="h-7 w-7 text-orange-400" />
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-black uppercase text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300">
+                <BarChart3 className="h-4 w-4" />
+                Productivity trends
+              </div>
+              <h1 className="text-4xl font-black leading-tight text-slate-950 dark:text-white sm:text-5xl">
+                Analytics
+              </h1>
+              <p className="mt-4 max-w-2xl text-slate-500 dark:text-slate-400">
+                Track completed tasks, XP growth, and your most productive days
+                from one focused view.
+              </p>
             </div>
 
-            <div>
-              <h2 className="text-lg font-bold text-white">XP Earned</h2>
-
-              <p className="text-sm text-zinc-400">Total growth</p>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-8 w-8 text-emerald-600 dark:text-emerald-300" />
+                <div>
+                  <div className="text-3xl font-black text-emerald-600 dark:text-emerald-300">
+                    {totalXp}
+                  </div>
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                    Total XP tracked
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="text-4xl font-black text-white">
-            {xpAnalytics[xpAnalytics.length - 1]?.xp || 0}
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center font-bold text-slate-500 shadow-xl dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            Loading analytics...
           </div>
-        </div>
+        ) : (
+          <>
+            <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <StatCard
+                icon={<CalendarCheck2 className="h-7 w-7" />}
+                label="Tasks Completed"
+                value={totalTasks}
+                caption="Across the tracked range"
+                tone="indigo"
+              />
+              <StatCard
+                icon={<TrendingUp className="h-7 w-7" />}
+                label="XP Earned"
+                value={totalXp}
+                caption="Total growth"
+                tone="emerald"
+              />
+              <StatCard
+                icon={<Activity className="h-7 w-7" />}
+                label="Most Active Day"
+                value={mostActiveDay}
+                caption="Highest productivity"
+                tone="amber"
+              />
+            </section>
 
-        <div
-          className="
-                  rounded-2xl
-                  border border-green-500/30
-                  bg-zinc-900/80
-                  p-6 shadow-xl
-               "
-        >
-          <div className="mb-4 flex items-center gap-3">
-            <div
-              className="
-                        rounded-xl
-                        bg-green-500/20
-                        p-3
-                     "
-            >
-              <Activity className="h-7 w-7 text-green-400" />
-            </div>
+            <section className="space-y-8">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                    Tasks Completed Per Day
+                  </h2>
+                  <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Daily productivity consistency
+                  </p>
+                </div>
+                <div className="h-[320px]">
+                  <Bar data={taskChartData} options={chartOptions} />
+                </div>
+              </div>
 
-            <div>
-              <h2 className="text-lg font-bold text-white">Most Active Day</h2>
-
-              <p className="text-sm text-zinc-400">Highest productivity</p>
-            </div>
-          </div>
-
-          <div className="text-4xl font-black text-white">
-            {
-              taskAnalytics.reduce(
-                (max, entry) => (entry.tasks > max.tasks ? entry : max),
-                taskAnalytics[0],
-              )?.date
-            }
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-8">
-        <div
-          className="
-                  rounded-2xl
-                  border border-zinc-700
-                  bg-zinc-900/80
-                  p-6 shadow-xl
-               "
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white">
-              Tasks Completed Per Day
-            </h2>
-
-            <p className="mt-2 text-zinc-400">Daily productivity consistency</p>
-          </div>
-
-          <Bar data={taskChartData} options={chartOptions} />
-        </div>
-
-        <div
-          className="
-                  rounded-2xl
-                  border border-zinc-700
-                  bg-zinc-900/80
-                  p-6 shadow-xl
-               "
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white">
-              XP Growth Over Time
-            </h2>
-
-            <p className="mt-2 text-zinc-400">Track your progression journey</p>
-          </div>
-
-          <Line data={xpChartData} options={chartOptions} />
-        </div>
-      </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                    XP Growth Over Time
+                  </h2>
+                  <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Track your progression journey
+                  </p>
+                </div>
+                <div className="h-[320px]">
+                  <Line data={xpChartData} options={chartOptions} />
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+      </motion.main>
     </div>
   );
 };
