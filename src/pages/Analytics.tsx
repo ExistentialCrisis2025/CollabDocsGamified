@@ -50,9 +50,15 @@ type RawXPAnalytics = {
   total_xp: string | number;
 };
 
+type RawHourAnalytics = {
+  hour: string | number;
+  count: string | number;
+};
+
 type AnalyticsResponse = {
   tasksPerDay?: RawTaskAnalytics[];
   xpOverTime?: RawXPAnalytics[];
+  productiveHours?: RawHourAnalytics[];
 };
 
 const StatCard = ({
@@ -95,6 +101,7 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [taskAnalytics, setTaskAnalytics] = useState<TaskAnalytics[]>([]);
   const [xpAnalytics, setXPAnalytics] = useState<XPAnalytics[]>([]);
+  const [hourAnalytics, setHourAnalytics] = useState<number[]>(Array(24).fill(0));
 
   useEffect(() => {
     async function loadAnalytics() {
@@ -115,8 +122,19 @@ const Analytics = () => {
           xp: Number(item.total_xp),
         }));
 
+        const hourData = Array(24).fill(0);
+        if (response.data.productiveHours) {
+          response.data.productiveHours.forEach((item) => {
+            const hour = Number(item.hour);
+            if (hour >= 0 && hour < 24) {
+              hourData[hour] = Number(item.count);
+            }
+          });
+        }
+
         setTaskAnalytics(taskData);
         setXPAnalytics(xpData);
+        setHourAnalytics(hourData);
       } catch (error) {
         console.error(error);
       } finally {
@@ -195,6 +213,18 @@ const Analytics = () => {
         pointBackgroundColor: "rgba(16, 185, 129, 1)",
         pointBorderColor: isDark ? "#0f172a" : "#ffffff",
         pointRadius: 5,
+      },
+    ],
+  };
+
+  const hourChartData = {
+    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+    datasets: [
+      {
+        label: "Tasks Completed by Hour",
+        data: hourAnalytics,
+        backgroundColor: "rgba(245, 158, 11, 0.78)",
+        borderRadius: 10,
       },
     ],
   };
@@ -305,6 +335,20 @@ const Analytics = () => {
                 </div>
                 <div className="h-[320px]">
                   <Line data={xpChartData} options={chartOptions} />
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                    Most Productive Hours
+                  </h2>
+                  <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Heatmap of your most active times of day
+                  </p>
+                </div>
+                <div className="h-[320px]">
+                  <Bar data={hourChartData} options={chartOptions} />
                 </div>
               </div>
             </section>

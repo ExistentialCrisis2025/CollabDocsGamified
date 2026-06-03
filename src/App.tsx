@@ -12,6 +12,7 @@ import LandingPage from "./pages/LandingPage";
 import KanbanPage from "./pages/KanbanPage";
 import PomodoroPage from "./pages/PomodoroPage";
 import ProfilePage from "./pages/ProfilePage";
+import Settings from "./pages/Settings";
 import { Toaster } from "react-hot-toast";
 
 import { Routes, Route } from "react-router-dom";
@@ -76,6 +77,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         ></Route>

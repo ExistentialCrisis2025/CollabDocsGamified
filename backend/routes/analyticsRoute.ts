@@ -53,13 +53,30 @@ router.get(
                [userId]
             );
 
+         const hours =
+            await pool.query(
+               `
+               SELECT
+                  EXTRACT(HOUR FROM updated_at) as hour,
+                  COUNT(*) as count
+               FROM tasks
+               WHERE user_id = $1 AND status = 'done'
+               GROUP BY hour
+               ORDER BY hour
+               `,
+               [userId]
+            );
+
          res.json({
 
             tasksPerDay:
                tasks.rows,
 
             xpOverTime:
-               xp.rows
+               xp.rows,
+
+            productiveHours:
+               hours.rows
          });
 
       } catch (err: any) {

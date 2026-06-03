@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Moon, Sun, UserCircle2, Flame } from "lucide-react";
+import { Moon, Sun, UserCircle2, Flame, Settings as SettingsIcon } from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
@@ -56,6 +56,13 @@ const TopBar = () => {
         >
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
+
+        <Link
+          to="/settings"
+          className="rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 hover:scale-105 active:scale-95"
+        >
+          <SettingsIcon className="h-5 w-5" />
+        </Link>
 
         <Link
           to="/profile"
