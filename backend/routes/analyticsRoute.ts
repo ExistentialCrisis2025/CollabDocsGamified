@@ -94,4 +94,45 @@ router.get(
    }
 );
 
+router.get(
+  "/heatmap",
+  authenticateToken,
+  async (
+    req,
+    res
+  ) => {
+
+    const userId =
+      (req as any).user.id;
+
+    const result =
+      await pool.query(
+        `
+        SELECT
+           EXTRACT(
+             HOUR
+             FROM completed_at
+           ) AS hour,
+
+           COUNT(*) AS count
+
+        FROM tasks
+
+        WHERE
+          user_id = $1
+          AND status='done'
+
+        GROUP BY hour
+
+        ORDER BY hour
+        `,
+        [userId]
+      );
+
+    res.json(
+      result.rows
+    );
+  }
+);
+
 export default router;

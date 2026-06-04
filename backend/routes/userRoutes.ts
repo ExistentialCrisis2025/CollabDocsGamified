@@ -74,7 +74,7 @@ router.get('/me/dashboard', authenticateToken, async (req: Request, res: Respons
 
     // User core stats
     const userRes = await pool.query(
-      'SELECT id, username, email, total_xp, level, current_streak, longest_streak FROM users WHERE id = $1',
+      'SELECT id, username, email, total_xp, level, current_streak, longest_streak,timezone FROM users WHERE id = $1',
       [userId]
     );
     if (userRes.rows.length === 0) {
@@ -129,5 +129,104 @@ router.get('/me/dashboard', authenticateToken, async (req: Request, res: Respons
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+router.post(
+  "/use-shield",
+  authenticateToken,
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+
+    try {
+
+      const userId =
+        (req as any).user.id;
+
+      await pool.query(
+        `
+        UPDATE users
+        SET shield_used_at =
+            CURRENT_TIMESTAMP
+        WHERE id = $1
+        `,
+        [userId]
+      );
+
+      res.json({
+        success: true,
+      });
+
+    } catch(err:any) {
+
+      res.status(500).json({
+        error:
+          "Failed to use shield"
+      });
+    }
+  }
+);
+
+router.get(
+  "/me/shield",
+  authenticateToken,
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+
+    const userId =
+      (req as any).user.id;
+
+    const result =
+      await pool.query(
+        `
+        SELECT shield_used_at
+        FROM users
+        WHERE id = $1
+        `,
+        [userId]
+      );
+
+    res.json({
+      shield_used_at:
+        result.rows[0]
+          .shield_used_at
+    });
+  }
+);
+
+router.patch(
+  "/me/timezone",
+  authenticateToken,
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+
+    const userId =
+      (req as any).user.id;
+
+    const {
+      timezone
+    } = req.body;
+
+    await pool.query(
+      `
+      UPDATE users
+      SET timezone = $1
+      WHERE id = $2
+      `,
+      [
+        timezone,
+        userId
+      ]
+    );
+
+    res.json({
+      success: true
+    });
+  }
+);
 
 export default router;

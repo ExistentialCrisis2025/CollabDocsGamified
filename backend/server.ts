@@ -12,6 +12,8 @@ import { startStreakCron } from './jobs/streakCron';
 import { startQuestCron } from './jobs/questCron';
 import badgeRoutes from './routes/badgeRoutes';
 import analyticsRoutes from './routes/analyticsRoute'
+import { startReportCron } from './jobs/reportCron';
+import reportRoutes from "./routes/reportRoutes";
 dotenv.config();
 
 const app = express();
@@ -27,6 +29,7 @@ app.use('/leaderboard', leaderboardRoutes);  // GET /leaderboard/weekly
 app.use('/quests',      questRoutes);        // GET /quests/today, POST /quests/:id/complete
 app.use('/quotes',      quoteRoutes);        // GET /quotes/random
 app.use('/analytics',analyticsRoutes)
+app.use("/reports",reportRoutes);
 
 app.use('/badges',badgeRoutes);
 // ── Health check ──────────────────────────────────────────────────────────────
@@ -35,6 +38,7 @@ app.get('/health', (_req, res) => res.json({ status: 'OK' }));
 // ── Background jobs ───────────────────────────────────────────────────────────
 startStreakCron();
 startQuestCron();
+startReportCron();
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;

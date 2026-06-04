@@ -4,6 +4,8 @@ import { authenticateToken } from '../middleware/auth';
 import redisClient from '../redisClient';
 import { refreshQuestProgress } from './questRoutes';
 import { evaluateBadges } from '../services/evaluateBadges';
+import { createTaskSchema,  updateStatusSchema} from "../validation/taskSchemas";
+import { z } from "zod";
 
 const router = Router();
 
@@ -12,6 +14,15 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
   try {
     const userId = (req as any).user.id;
     const { title, description, priority, due_date, xp_reward, status, position } = req.body;
+
+    const parsed = createTaskSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: parsed.error.flatten(),
+      });
+      return;
+    }
 
     if (!title) {
       res.status(400).json({ error: 'Title is required' });
@@ -82,6 +93,33 @@ router.patch('/reorder', authenticateToken, async (req: Request, res: Response):
     const userId = (req as any).user.id;
     const { tasks } = req.body; // array of { id, status, position }
 
+    const reorderSchema =
+      z.object({
+        tasks: z.array(
+          z.object({
+            id: z.number(),
+            status: z.enum([
+              "todo",
+              "in-progress",
+              "done",
+            ]),
+            position: z.number(),
+          })
+        ),
+      });
+
+      const parsed =
+        reorderSchema.safeParse(
+          req.body
+        );
+
+      if (!parsed.success) {
+        res.status(400).json({
+          error: parsed.error.flatten(),
+        });
+        return;
+      }
+
     if (!tasks || !Array.isArray(tasks)) {
       res.status(400).json({ error: 'Tasks array is required' });
       return;
@@ -113,6 +151,17 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
     const userId = (req as any).user.id;
     const taskId = req.params.id;
     const { status } = req.body;
+    const parsed =
+      updateStatusSchema.safeParse(
+        req.body
+      );
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: parsed.error.flatten(),
+      });
+      return;
+    }
 
     if (!status) {
       res.status(400).json({ error: 'Status is required' });
