@@ -3,6 +3,7 @@ import pool from '../db';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+const STREAK_SHIELD_COST = 100;
 
 // GET /users/me/xp — current XP, level, and next level threshold
 router.get('/me/xp', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -74,7 +75,7 @@ router.get('/me/dashboard', authenticateToken, async (req: Request, res: Respons
 
     // User core stats
     const userRes = await pool.query(
-      'SELECT id, username, email, total_xp, level, current_streak, longest_streak,timezone FROM users WHERE id = $1',
+      'SELECT id, username, email, total_xp, streak_tokens, streak_shields, level, current_streak, longest_streak, timezone FROM users WHERE id = $1',
       [userId]
     );
     if (userRes.rows.length === 0) {
@@ -114,6 +115,9 @@ router.get('/me/dashboard', authenticateToken, async (req: Request, res: Respons
         username: user.username,
         email: user.email,
         total_xp: user.total_xp,
+        streak_tokens: user.streak_tokens,
+        streak_shields: user.streak_shields,
+        streak_shield_cost: STREAK_SHIELD_COST,
         level: user.level,
         next_level_xp,
         current_streak: user.current_streak,
@@ -131,7 +135,7 @@ router.get('/me/dashboard', authenticateToken, async (req: Request, res: Respons
 });
 
 router.post(
-  "/use-shield",
+  "/buy-shield",
   authenticateToken,
   async (
     req: Request,
@@ -143,25 +147,37 @@ router.post(
       const userId =
         (req as any).user.id;
 
-      await pool.query(
+      const result = await pool.query(
         `
         UPDATE users
-        SET shield_used_at =
-            CURRENT_TIMESTAMP
-        WHERE id = $1
+        SET streak_tokens = COALESCE(streak_tokens, 0) - $1,
+            streak_shields = COALESCE(streak_shields, 0) + 1
+        WHERE id = $2
+          AND COALESCE(streak_tokens, 0) >= $1
+        RETURNING streak_tokens, streak_shields
         `,
-        [userId]
+        [STREAK_SHIELD_COST, userId]
       );
+
+      if (result.rows.length === 0) {
+        res.status(400).json({
+          error: `You need ${STREAK_SHIELD_COST} streak tokens to buy a shield.`,
+        });
+        return;
+      }
 
       res.json({
         success: true,
+        streak_tokens: result.rows[0].streak_tokens,
+        streak_shields: result.rows[0].streak_shields,
+        streak_shield_cost: STREAK_SHIELD_COST,
       });
 
     } catch(err:any) {
 
       res.status(500).json({
         error:
-          "Failed to use shield"
+          "Failed to buy shield"
       });
     }
   }
@@ -181,7 +197,7 @@ router.get(
     const result =
       await pool.query(
         `
-        SELECT shield_used_at
+        SELECT streak_tokens, streak_shields
         FROM users
         WHERE id = $1
         `,
@@ -189,9 +205,9 @@ router.get(
       );
 
     res.json({
-      shield_used_at:
-        result.rows[0]
-          .shield_used_at
+      streak_tokens: result.rows[0]?.streak_tokens ?? 0,
+      streak_shields: result.rows[0]?.streak_shields ?? 0,
+      streak_shield_cost: STREAK_SHIELD_COST,
     });
   }
 );

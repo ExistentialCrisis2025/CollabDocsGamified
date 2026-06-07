@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { getAuthToken, setAuthToken } from "../utils/authToken";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
@@ -10,7 +11,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
 
   useEffect(() => {
     if (token) {
@@ -63,7 +64,7 @@ const Signup = () => {
         password,
       });
       console.log("Success:", response.data);
-      localStorage.setItem("token", response.data.token);
+      setAuthToken(response.data.token);
 
       setUsername("");
       setEmail("");

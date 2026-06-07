@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Moon, Sun, Bell, Globe, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../api/axios";
+import { getAuthToken } from "../utils/authToken";
 
 const Settings = () => {
   const { isDark, toggleTheme } = useThemeStore();
@@ -44,7 +45,8 @@ const Settings = () => {
     async function fetchSettings() {
       try {
         const token = localStorage.getItem("token");
-
+        // We assume dashboard or a user endpoint returns shield info,
+        // if not, we default to 0.
         const response = await api.get("/users/me/dashboard", {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -2,11 +2,12 @@ import axios from "axios";
 import api from "./axios";
 import { normalizeReports } from "../components/types/report";
 import type { AIWeeklyReport } from "../components/types/report";
+import { getAuthToken } from "../utils/authToken";
 
 const reportEndpoints = ["/reports/me", "/users/me/reports", "/weekly-reports/me"];
 
 export const fetchReportHistory = async (): Promise<AIWeeklyReport[]> => {
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
   const headers = { Authorization: `Bearer ${token}` };
 
   for (const endpoint of reportEndpoints) {

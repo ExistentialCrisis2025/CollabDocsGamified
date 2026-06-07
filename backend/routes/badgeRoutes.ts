@@ -13,14 +13,14 @@ router.get(
 
       const badges = await pool.query(
         `
-        SELECT
+        SELECT DISTINCT ON (LOWER(b.name))
           b.*,
           ub.unlocked_at
         FROM user_badges ub
         JOIN badges b
           ON ub.badge_id = b.id
         WHERE ub.user_id = $1
-        ORDER BY ub.unlocked_at DESC
+        ORDER BY LOWER(b.name), ub.unlocked_at DESC, b.id ASC
         `,
         [userId]
       );

@@ -8,6 +8,8 @@ import { AnimatePresence } from "framer-motion";
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
 
+import { Flame, Star, Trophy } from "lucide-react";
+
 type Props = {
   fetchDashboard: () => void;
   dashboardData: any;
@@ -113,7 +115,7 @@ const Kanban = (prop: Props) => {
     setTasks(finalTasks);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       if (oldStatus !== newStatus) {
         await api.patch(
@@ -202,7 +204,7 @@ const Kanban = (prop: Props) => {
   };
 
   async function fetchTask() {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     console.log(token);
 
     try {
@@ -219,7 +221,7 @@ const Kanban = (prop: Props) => {
 
   async function fetchXP() {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       const response = await api.get("/users/me/xp", {
         headers: {
@@ -235,6 +237,23 @@ const Kanban = (prop: Props) => {
       return response;
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async function fetchQuests() {
+    try {
+      console.log("Hello");
+      const token = localStorage.getItem("token");
+
+      const response = await api.get("/quests/today", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setQuests(response.data.quests);
+    } catch (error) {
+      console.error("Failed to fetch quests due to ", error);
     }
   }
 
@@ -255,7 +274,7 @@ const Kanban = (prop: Props) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.post(
         "/tasks",
         {
@@ -292,7 +311,7 @@ const Kanban = (prop: Props) => {
 
   const removeTask = async (taskID: number) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       await api.delete(`/tasks/${taskID}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -323,7 +342,7 @@ const Kanban = (prop: Props) => {
     setTasks(updatedTasks);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       const patchResponse = await api.patch(
         `/tasks/${taskID}/status`,

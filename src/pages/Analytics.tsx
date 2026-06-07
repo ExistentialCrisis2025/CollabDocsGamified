@@ -18,6 +18,7 @@ import api from "../api/axios";
 import TopBar from "../components/TopBar";
 import { useThemeStore } from "../store/themeStore";
 import { Activity, ArrowLeft, BarChart3, CalendarCheck2, TrendingUp } from "lucide-react";
+import { getAuthToken } from "../utils/authToken";
 
 ChartJS.register(
   CategoryScale,
@@ -107,7 +108,7 @@ const Analytics = () => {
     async function loadAnalytics() {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
         const response = await api.get<AnalyticsResponse>("/analytics/overview", {
           headers: { Authorization: `Bearer ${token}` },
         });

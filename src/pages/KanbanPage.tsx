@@ -6,13 +6,14 @@ import Kanban from "../components/Kanban";
 import TopBar from "../components/TopBar";
 import { ArrowLeft } from "lucide-react";
 import type { Task } from "../components/types/types";
+import { getAuthToken } from "../utils/authToken";
 
 const KanbanPage = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
 
   async function fetchDashboard() {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.get("/users/me/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       });

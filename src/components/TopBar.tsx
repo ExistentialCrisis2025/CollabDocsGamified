@@ -4,6 +4,7 @@ import { useThemeStore } from "../store/themeStore";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { getAuthToken } from "../utils/authToken";
 
 const TopBar = () => {
   const { isDark, toggleTheme } = useThemeStore();
@@ -12,7 +13,7 @@ const TopBar = () => {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
         const response = await api.get("/users/me/dashboard", {
           headers: { Authorization: `Bearer ${token}` },
         });

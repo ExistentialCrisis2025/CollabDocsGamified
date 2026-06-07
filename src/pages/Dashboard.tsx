@@ -2,12 +2,13 @@ import { useNavigate } from "react-router-dom";
 import Kanban from "../components/Kanban";
 import { useState } from "react";
 import api from "../api/axios";
+import { clearAuthToken, getAuthToken } from "../utils/authToken";
 
 import type { Task } from "../components/types/types";
 const Dashboard = () => {
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.setItem("token", "");
+    clearAuthToken();
     navigate("/");
   };
 
@@ -18,7 +19,7 @@ const Dashboard = () => {
     try {
       setDashboardLoading(true);
 
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       const response = await api.get("/users/me/dashboard", {
         headers: {

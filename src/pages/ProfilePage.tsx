@@ -9,6 +9,7 @@ import { ArrowLeft, Trophy, Camera, CheckCircle2, Gift, BrainCircuit, Sparkles }
 import type { Quest } from "../components/types/quest";
 import type { AIWeeklyReport } from "../components/types/report";
 import { toast } from "react-hot-toast";
+import { getAuthToken } from "../utils/authToken";
 
 type DashboardData = {
   user?: {
@@ -52,7 +53,7 @@ const ProfilePage = () => {
 
   async function fetchBadges() {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.get("/badges/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -64,7 +65,7 @@ const ProfilePage = () => {
 
   async function fetchDashboard() {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.get("/users/me/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -76,7 +77,7 @@ const ProfilePage = () => {
 
   async function fetchQuests() {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.get("/quests/today", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -101,7 +102,7 @@ const ProfilePage = () => {
   const claimQuest = async (questId: number) => {
     try {
       setClaiming(questId);
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const response = await api.post(
         `/quests/${questId}/complete`,
         {},

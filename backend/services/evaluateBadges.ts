@@ -8,7 +8,8 @@ export async function evaluateBadges(
       `
       SELECT
          level,
-         total_xp
+         total_xp,
+         current_streak
       FROM users
       WHERE id = $1
       `,
@@ -37,7 +38,11 @@ export async function evaluateBadges(
 
    const badgesRes =
       await pool.query(
-         `SELECT * FROM badges`
+         `
+         SELECT DISTINCT ON (LOWER(name)) *
+         FROM badges
+         ORDER BY LOWER(name), id ASC
+         `
       );
 
    const unlocked = [];
@@ -61,6 +66,13 @@ export async function evaluateBadges(
       if (
          rule.level &&
          user.level >= rule.level
+      ) {
+         qualifies = true;
+      }
+
+      if (
+         rule.current_streak &&
+         user.current_streak >= rule.current_streak
       ) {
          qualifies = true;
       }

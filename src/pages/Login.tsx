@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import api from "../api/axios";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
+import { getAuthToken, setAuthToken } from "../utils/authToken";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,13 +12,13 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
 
   useEffect(() => {
     if (token) {
       navigate("/dashboard");
     }
-  });
+  }, [navigate, token]);
 
   function handleEmailInput(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
@@ -51,13 +52,12 @@ const Login = () => {
     try {
       const response = await api.post("/login", userData);
       console.log("Success:", response.data);
-      localStorage.setItem("token", response.data.token);
+      setAuthToken(response.data.token, remember);
 
       setEmail("");
       setPassword("");
       setRemember(false);
 
-      localStorage.setItem("token", response.data.token);
       navigate("/dashboard");
     } catch (error) {
       console.error("Error logging in:", error);

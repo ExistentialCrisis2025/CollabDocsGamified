@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { setAuthToken } from "../utils/authToken";
 
 const OAuthCallback = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const OAuthCallback = () => {
     const error = searchParams.get("error");
 
     if (token) {
-      localStorage.setItem("token", token);
+      setAuthToken(token);
       navigate("/dashboard", { replace: true });
       return;
     }

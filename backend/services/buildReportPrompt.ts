@@ -7,24 +7,27 @@ You are a productivity coach.
 
 User stats:
 
-Level:
-${stats.level}
-
-Total XP:
-${stats.total_xp}
+Report Period:
+${stats.week_start} to ${stats.week_end}
 
 Current Streak:
 ${stats.current_streak}
 
-Tasks Completed:
+Tasks Completed This Week:
 ${stats.tasks_completed}
 
-Write:
+XP Earned This Week:
+${stats.weekly_xp}
 
-1. Summary
-2. What went well
-3. Areas to improve
-4. Next week goal
+Return a polished plain-text report with these exact section labels:
+
+Summary:
+What went well:
+Areas to improve:
+Next week goal:
+
+Do not use markdown, asterisks, numbered headings, bullets, or emoji.
+Write each section in clear professional sentences.
 
 Keep under 250 words.
 `;

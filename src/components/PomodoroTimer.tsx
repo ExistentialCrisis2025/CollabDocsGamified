@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import api from "../api/axios";
+import { getAuthToken } from "../utils/authToken";
 
 import { Settings, Play, Pause, RotateCcw, Timer } from "lucide-react";
 
@@ -26,7 +27,7 @@ const PomodoroTimer = ({ taskId, taskTitle }: Props) => {
     if (!isRunning) {
       setSecondsLeft(isBreak ? breakConfig * 60 : focusConfig * 60);
     }
-  }, [focusConfig, breakConfig, isBreak, isRunning]);
+  }, [focusConfig, breakConfig, isBreak]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -52,7 +53,7 @@ const PomodoroTimer = ({ taskId, taskTitle }: Props) => {
     setIsRunning(false);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       await api.post(
         "/pomodoro/session",

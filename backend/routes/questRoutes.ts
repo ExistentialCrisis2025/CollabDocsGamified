@@ -173,7 +173,11 @@ router.post('/:id/complete', authenticateToken, async (req: Request, res: Respon
     // Award bonus XP to user
     const bonusXp = quest.bonus_xp;
     const userRes = await pool.query(
-      'UPDATE users SET total_xp = total_xp + $1 WHERE id = $2 RETURNING total_xp',
+      `UPDATE users
+       SET total_xp = total_xp + $1,
+           streak_tokens = COALESCE(streak_tokens, 0) + $1
+       WHERE id = $2
+       RETURNING total_xp`,
       [bonusXp, userId]
     );
     const newTotalXp = userRes.rows[0].total_xp;

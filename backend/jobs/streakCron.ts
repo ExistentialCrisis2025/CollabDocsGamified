@@ -14,7 +14,7 @@ export function startStreakCron(): void {
           current_streak,
           longest_streak,
           timezone,
-          shield_used_at
+          streak_shields
         FROM users
       `);
 
@@ -68,15 +68,13 @@ export function startStreakCron(): void {
           currentStreak > 0
         ) {
 
-          if (
-            user.shield_used_at === null
-          ) {
+          if ((user.streak_shields ?? 0) > 0) {
 
             await pool.query(
               `
               UPDATE users
-              SET shield_used_at =
-                  CURRENT_TIMESTAMP
+              SET streak_shields =
+                  GREATEST(COALESCE(streak_shields, 0) - 1, 0)
               WHERE id = $1
               `,
               [userId]

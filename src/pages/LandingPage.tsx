@@ -8,6 +8,7 @@ import { fetchReportHistory } from "../api/reports";
 import type { AIWeeklyReport } from "../components/types/report";
 import { shouldShowDashboardReport } from "../components/types/report";
 import { Timer, LayoutDashboard, Trophy, BarChart3, LogOut } from "lucide-react";
+import { clearAuthToken, getAuthToken } from "../utils/authToken";
 
 type DashboardTask = {
   id: number | string;
@@ -37,7 +38,7 @@ const LandingPage = () => {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
         const response = await api.get("/users/me/dashboard", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -61,7 +62,7 @@ const LandingPage = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.setItem("token", "");
+    clearAuthToken();
     navigate("/");
   };
 

@@ -11,12 +11,8 @@ import {
 } from "../middleware/auth";
 
 import {
-  buildPrompt,
-} from "../services/buildReportPrompt";
-
-import {
-  generateReport,
-} from "../services/reportGenerator";
+  generateWeeklyReportForUser,
+} from "../services/weeklyReportService";
 
 const router = Router();
 
@@ -72,67 +68,14 @@ router.post(
       const userId =
         (req as any).user.id;
 
-      const user =
-        await pool.query(
-          `
-          SELECT *
-          FROM users
-          WHERE id = $1
-          `,
-          [userId]
+      const generated =
+        await generateWeeklyReportForUser(
+          userId
         );
-
-      const completed =
-        await pool.query(
-          `
-          SELECT COUNT(*)
-          FROM tasks
-          WHERE
-             user_id = $1
-             AND status='done'
-          `,
-          [userId]
-        );
-
-      const prompt =
-        buildPrompt({
-          level:
-            user.rows[0].level,
-
-          total_xp:
-            user.rows[0].total_xp,
-
-          current_streak:
-            user.rows[0].current_streak,
-
-          tasks_completed:
-            completed.rows[0].count,
-        });
-
-      const report =
-        await generateReport(
-          prompt
-        );
-
-      await pool.query(
-        `
-        INSERT INTO weekly_reports
-        (
-          user_id,
-          report_text
-        )
-        VALUES
-        ($1,$2)
-        `,
-        [
-          userId,
-          report,
-        ]
-      );
 
       res.json({
         success: true,
-        report,
+        ...generated,
       });
 
     } catch (err: any) {

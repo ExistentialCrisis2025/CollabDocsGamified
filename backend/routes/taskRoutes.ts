@@ -129,7 +129,7 @@ router.patch('/reorder', authenticateToken, async (req: Request, res: Response):
 
     for (const task of tasks) {
       await client.query(
-        'UPDATE tasks SET status = $1, position = $2 WHERE id = $3 AND user_id = $4',
+        'UPDATE tasks SET status = $1, position = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4',
         [task.status, task.position, task.id, userId]
       );
     }
@@ -234,9 +234,14 @@ router.patch('/:id/status', authenticateToken, async (req: Request, res: Respons
     }
 
     if (xpAssigned !== 0) {
+      const tokenDelta = xpAssigned > 0 ? xpAssigned : 0;
       const userRes = await pool.query(
-        'UPDATE users SET total_xp = total_xp + $1 WHERE id = $2 RETURNING total_xp',
-        [xpAssigned, userId]
+        `UPDATE users
+         SET total_xp = total_xp + $1,
+             streak_tokens = COALESCE(streak_tokens, 0) + $2
+         WHERE id = $3
+         RETURNING total_xp`,
+        [xpAssigned, tokenDelta, userId]
       );
       const newTotalXp = userRes.rows[0].total_xp;
 

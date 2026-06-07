@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import api from "../api/axios";
 import TopBar from "../components/TopBar";
 import { ArrowLeft, Crown, Flame, Medal, Trophy } from "lucide-react";
+import { getAuthToken } from "../utils/authToken";
 
 type LeaderboardUser = {
   id: number;
@@ -49,7 +50,7 @@ const Leaderboard = () => {
     async function loadLeaderboard() {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
+        const token = getAuthToken();
         const response = await api.get("/leaderboard/weekly", {
           headers: { Authorization: `Bearer ${token}` },
         });

@@ -10,6 +10,9 @@ async function runMigrations() {
       email VARCHAR(255) UNIQUE,
       password VARCHAR(255) NOT NULL,
       total_xp INT DEFAULT 0,
+      streak_tokens INT DEFAULT 0,
+      streak_shields INT DEFAULT 0,
+      streak_tokens_seeded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       level INT DEFAULT 1,
       current_streak INT DEFAULT 0,
       longest_streak INT DEFAULT 0,
@@ -26,12 +29,17 @@ async function runMigrations() {
       xp_reward INT DEFAULT 0,
       status VARCHAR(50) DEFAULT 'todo',
       position INT DEFAULT 0,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS total_xp INT DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_tokens INT DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_shields INT DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_tokens_seeded_at TIMESTAMP WITH TIME ZONE;
+    ALTER TABLE users ALTER COLUMN streak_tokens_seeded_at SET DEFAULT CURRENT_TIMESTAMP;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS level INT DEFAULT 1;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS current_streak INT DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS longest_streak INT DEFAULT 0;
@@ -39,8 +47,22 @@ async function runMigrations() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'UTC';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
 
+    UPDATE users
+    SET streak_tokens = COALESCE(total_xp, 0),
+        streak_tokens_seeded_at = CURRENT_TIMESTAMP
+    WHERE streak_tokens_seeded_at IS NULL;
+
     ALTER TABLE tasks ADD COLUMN IF NOT EXISTS position INT DEFAULT 0;
-    ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+    ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;
+
+    UPDATE tasks
+    SET updated_at = COALESCE(created_at, CURRENT_TIMESTAMP)
+    WHERE updated_at IS NULL;
+
+    ALTER TABLE tasks ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
+
+    CREATE INDEX IF NOT EXISTS idx_tasks_user_status_updated_at
+    ON tasks(user_id, status, updated_at);
 
     CREATE TABLE IF NOT EXISTS xp_events (
       id SERIAL PRIMARY KEY,
@@ -95,7 +117,7 @@ async function runMigrations() {
 
     CREATE TABLE IF NOT EXISTS badges (
       id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
+      name VARCHAR(100) NOT NULL UNIQUE,
       description TEXT,
       rarity VARCHAR(20) DEFAULT 'common',
       rule JSONB NOT NULL
@@ -108,6 +130,52 @@ async function runMigrations() {
       unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, badge_id)
     );
+
+    WITH canonical_badges AS (
+      SELECT
+        id,
+        MIN(id) OVER (PARTITION BY LOWER(name)) AS canonical_id
+      FROM badges
+    )
+    DELETE FROM user_badges ub
+    USING canonical_badges cb
+    WHERE ub.badge_id = cb.id
+      AND cb.id <> cb.canonical_id
+      AND EXISTS (
+        SELECT 1
+        FROM user_badges existing
+        WHERE existing.user_id = ub.user_id
+          AND existing.badge_id = cb.canonical_id
+      );
+
+    WITH canonical_badges AS (
+      SELECT
+        id,
+        MIN(id) OVER (PARTITION BY LOWER(name)) AS canonical_id
+      FROM badges
+    )
+    UPDATE user_badges ub
+    SET badge_id = cb.canonical_id
+    FROM canonical_badges cb
+    WHERE ub.badge_id = cb.id
+      AND cb.id <> cb.canonical_id;
+
+    DELETE FROM user_badges a
+    USING user_badges b
+    WHERE a.id > b.id
+      AND a.user_id = b.user_id
+      AND a.badge_id = b.badge_id;
+
+    DELETE FROM badges b
+    USING badges canonical
+    WHERE LOWER(b.name) = LOWER(canonical.name)
+      AND b.id > canonical.id;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_badges_name
+      ON badges (name);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_badges_lower_name
+      ON badges (LOWER(name));
 
     CREATE TABLE IF NOT EXISTS weekly_reports (
       id SERIAL PRIMARY KEY,
@@ -129,8 +197,14 @@ async function runMigrations() {
     INSERT INTO badges (name, description, rarity, rule) VALUES
     ('First Task', 'Complete your first task', 'common', '{"tasks_completed":1}'),
     ('Task Master', 'Complete 50 tasks', 'rare', '{"tasks_completed":50}'),
-    ('Level 5', 'Reach Level 5', 'epic', '{"level":5}')
-    ON CONFLICT DO NOTHING;
+    ('Level 5', 'Reach Level 5', 'epic', '{"level":5}'),
+    ('10 Day Streak', 'Maintain a 10 day streak', 'rare', '{"current_streak":10}'),
+    ('50 Day Streak', 'Maintain a 50 day streak', 'epic', '{"current_streak":50}'),
+    ('100 Day Streak', 'Maintain a 100 day streak', 'legendary', '{"current_streak":100}')
+    ON CONFLICT (name) DO UPDATE
+    SET description = EXCLUDED.description,
+        rarity = EXCLUDED.rarity,
+        rule = EXCLUDED.rule;
   `);
 
   console.log('[migrate] Done.');

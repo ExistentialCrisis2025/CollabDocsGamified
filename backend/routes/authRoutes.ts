@@ -76,7 +76,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await pool.query(
-      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
+      'INSERT INTO users (username, email, password, streak_tokens_seeded_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id, username, email',
       [username, email, hashedPassword]
     );
 
@@ -263,7 +263,7 @@ router.get('/auth/google/callback', async (req: Request, res: Response): Promise
         const randomPassword = crypto.randomBytes(24).toString('hex');
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
         const created = await pool.query(
-          'INSERT INTO users (username, email, password, google_id) VALUES ($1, $2, $3, $4) RETURNING *',
+          'INSERT INTO users (username, email, password, google_id, streak_tokens_seeded_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *',
           [username, email, hashedPassword, googleId]
         );
         user = created.rows[0];
