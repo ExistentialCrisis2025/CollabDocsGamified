@@ -1,17 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import type { Priority, Status, Task } from "./types/types";
 import api from "../api/axios";
-import XPBar from "./XPBar";
 import toast from "react-hot-toast";
-import type { Quest } from "./types/quest";
-import PomodoroTimer from "./PomodoroTimer";
 import LevelUpOverlay from "./LevelUpOverlay";
 import { AnimatePresence } from "framer-motion";
 
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
-
-import { Flame, Star, Trophy } from "lucide-react";
 
 type Props = {
   fetchDashboard: () => void;
@@ -28,8 +23,6 @@ const Kanban = (prop: Props) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const loadRef = useRef(false);
   const [loading, setLoading] = useState(false);
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [focusedTask, setFocusedTask] = useState<Task | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
 
@@ -245,23 +238,6 @@ const Kanban = (prop: Props) => {
     }
   }
 
-  async function fetchQuests() {
-    try {
-      console.log("Hello");
-      const token = localStorage.getItem("token");
-
-      const response = await api.get("/quests/today", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setQuests(response.data.quests);
-    } catch (error) {
-      console.error("Failed to fetch quests due to ", error);
-    }
-  }
-
   const columns = {
     todo: tasks
       .filter((task) => task.status === "todo")
@@ -378,7 +354,7 @@ const Kanban = (prop: Props) => {
         if (unlockedBadges && unlockedBadges.length > 0) {
           unlockedBadges.forEach((badge: any) => {
             toast.success(`Badge Unlocked: ${badge.name}!`, {
-              icon: '🏅',
+              icon: "🏅",
               duration: 5000,
               style: {
                 background: "#27272a",
@@ -419,7 +395,6 @@ const Kanban = (prop: Props) => {
 
       fetchTask();
       fetchXP();
-      fetchQuests();
       prop.fetchDashboard();
     }
   }, []);
@@ -428,9 +403,9 @@ const Kanban = (prop: Props) => {
     <div className="w-full">
       <AnimatePresence>
         {showLevelUp && (
-          <LevelUpOverlay 
-            level={newLevel} 
-            onClose={() => setShowLevelUp(false)} 
+          <LevelUpOverlay
+            level={newLevel}
+            onClose={() => setShowLevelUp(false)}
           />
         )}
       </AnimatePresence>
@@ -485,7 +460,7 @@ const Kanban = (prop: Props) => {
 
             <button
               onClick={addNewTask}
-              className={`w-full rounded-xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-4 py-3 font-bold text-white shadow-lg transition-transform md:col-span-2 ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.02]"}`}
+              className={`w-full rounded-xl bg-linear-to-r from-indigo-500 to-emerald-500 px-4 py-3 font-bold text-white shadow-lg transition-transform md:col-span-2 ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.02]"}`}
               disabled={loading}
             >
               {loading ? "Creating..." : "+ Add Task"}
@@ -503,7 +478,6 @@ const Kanban = (prop: Props) => {
                 title={stat}
                 removeTask={removeTask}
                 updateTaskStatus={updateTaskStatus}
-                setFocusedTask={setFocusedTask}
               />
             ))}
           </div>

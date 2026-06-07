@@ -8,56 +8,94 @@ import api from "../api/axios";
 
 const Settings = () => {
   const { isDark, toggleTheme } = useThemeStore();
-  const [notifications, setNotifications] = useState(true);
-  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem("notifications");
+
+    return saved !== null ? saved === "true" : true;
+  });
+  const [timezone, setTimezone] = useState(() => {
+    const saved = localStorage.getItem("timezone");
+
+    return saved || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  });
   const [shields, setShields] = useState(0);
 
   useEffect(() => {
     // Try loading from localStorage first to keep it functional
-    const savedNotifications = localStorage.getItem("notifications");
-    if (savedNotifications !== null) {
-      setNotifications(savedNotifications === "true");
-    }
-
-    const savedTimezone = localStorage.getItem("timezone");
-    if (savedTimezone) {
-      setTimezone(savedTimezone);
-    }
 
     // Try fetching shield count if backend has it
-    async function fetchShields() {
+    async function fetchShield() {
       try {
         const token = localStorage.getItem("token");
-        // We assume dashboard or a user endpoint returns shield info,
-        // if not, we default to 0.
-        const response = await api.get("/users/me/dashboard", {
-          headers: { Authorization: `Bearer ${token}` },
+
+        const response = await api.get("/users/me/shield", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-        if (response.data?.user?.shields !== undefined) {
-          setShields(response.data.user.shields);
-        } else {
-          // Placeholder if backend is not implemented yet
-          setShields(0);
-        }
+
+        setShields(response.data.shield_used_at ? 0 : 1);
       } catch (error) {
-        console.error("Failed to fetch user info", error);
+        console.error("Failed to fetch shield", error);
       }
     }
-    fetchShields();
+    fetchShield();
+
+    async function fetchSettings() {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await api.get("/users/me/dashboard", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.user?.timezone) {
+          setTimezone(response.data.user.timezone);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchSettings();
   }, []);
 
-  const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNotificationsChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const val = e.target.checked;
     setNotifications(val);
     localStorage.setItem("notifications", String(val));
   };
 
-  const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTimezoneChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     const val = e.target.value;
-    setTimezone(val);
-    localStorage.setItem("timezone", val);
-  };
 
+    setTimezone(val);
+
+    localStorage.setItem("timezone", val);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await api.patch(
+        "/users/me/timezone",
+        {
+          timezone: val,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+    } catch (err) {
+      console.error("Failed to save timezone", err);
+    }
+  };
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <TopBar />
@@ -89,14 +127,22 @@ const Settings = () => {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">Theme Toggle</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Switch between light and dark mode</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Theme Toggle
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Switch between light and dark mode
+                </p>
               </div>
               <button
                 onClick={toggleTheme}
                 className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
               >
-                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
                 {isDark ? "Light Mode" : "Dark Mode"}
               </button>
             </div>
@@ -110,8 +156,12 @@ const Settings = () => {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">Email Notifications</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Receive reminders and updates</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Email Notifications
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Receive reminders and updates
+                </p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
@@ -133,8 +183,12 @@ const Settings = () => {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">Timezone</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Set your local timezone for streaks and deadlines</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Timezone
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Set your local timezone for streaks and deadlines
+                </p>
               </div>
               <select
                 value={timezone}
@@ -148,7 +202,9 @@ const Settings = () => {
                 <option value="Europe/London">London (GMT)</option>
                 <option value="Europe/Paris">Central Europe (CET)</option>
                 <option value="Asia/Tokyo">Tokyo (JST)</option>
-                <option value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+                <option
+                  value={Intl.DateTimeFormat().resolvedOptions().timeZone}
+                >
                   {Intl.DateTimeFormat().resolvedOptions().timeZone} (Auto)
                 </option>
               </select>
@@ -163,13 +219,18 @@ const Settings = () => {
             </div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">Active Shields: {shields}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Shields protect your streak if you miss a day.</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Active Shields: {shields}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Shields protect your streak if you miss a day.
+                </p>
               </div>
               <button
+                disabled
                 className="rounded-xl bg-indigo-100 px-5 py-2.5 font-bold text-indigo-700 transition hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:hover:bg-indigo-500/30"
               >
-                Buy Shield (1000 XP)
+                Coming Soon
               </button>
             </div>
           </section>

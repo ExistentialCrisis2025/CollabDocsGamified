@@ -3,7 +3,6 @@ import "./App.css";
 import "./index.css";
 
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";

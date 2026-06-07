@@ -1,5 +1,3 @@
-import React from "react";
-
 import type { Status, Task } from "./types/types";
 import { Draggable } from "@hello-pangea/dnd";
 
@@ -8,7 +6,6 @@ type prop = {
   removeTask: (id: number) => void;
   updateTaskStatus: (id: number, task_status: Status) => void;
   index: number;
-  setFocusedTask: (task: Task) => void;
 };
 
 const TaskCard = (Prop: prop) => {
@@ -100,7 +97,6 @@ const TaskCard = (Prop: prop) => {
           </button>
 
           <button
-            onClick={() => Prop.setFocusedTask(Prop.task)}
             className="
             rounded-lg
             bg-red-500/20

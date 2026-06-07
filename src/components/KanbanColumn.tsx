@@ -5,11 +5,11 @@ import type { Status, Task } from "./types/types";
 import { Droppable } from "@hello-pangea/dnd";
 
 type props = {
-  title: Status;
+  title: string;
   tasks: Task[];
+  status: Status;
   removeTask: (task_id: number) => void;
   updateTaskStatus: (task_id: number, task_status: Status) => void;
-  setFocusedTask: (task:Task) => void;
 };
 
 const KanbanColumn = (Props: props) => {
@@ -32,10 +32,10 @@ const KanbanColumn = (Props: props) => {
 
   return (
     <div
-      className={`flex min-h-150 flex-col rounded-2xl border bg-zinc-900/80 p-4 shadow-2xl ${ColumnStyles[Props.title].border}`}
+      className={`flex min-h-150 flex-col rounded-2xl border bg-zinc-900/80 p-4 shadow-2xl ${ColumnStyles[Props.status].border}`}
     >
       <div
-        className={`mb-4 rounded-xl bg-linear-to-r p-4 text-center text-lg font-bold uppercase tracking-wide text-white ${ColumnStyles[Props.title].header}`}
+        className={`mb-4 rounded-xl bg-linear-to-r p-4 text-center text-lg font-bold uppercase tracking-wide text-white ${ColumnStyles[Props.status].header}`}
       >
         {Props.title.replace("-", " ")}
       </div>
@@ -68,7 +68,6 @@ const KanbanColumn = (Props: props) => {
                 task={task}
                 updateTaskStatus={Props.updateTaskStatus}
                 index={index}
-                setFocusedTask={Props.setFocusedTask}
               />
             ))}
 
