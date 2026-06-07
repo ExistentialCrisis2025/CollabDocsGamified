@@ -2,7 +2,34 @@ import pool from './db';
 
 async function runMigrations() {
   console.log('[migrate] Running migrations...');
-  
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(50) UNIQUE,
+      email VARCHAR(255) UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      total_xp INT DEFAULT 0,
+      level INT DEFAULT 1,
+      current_streak INT DEFAULT 0,
+      longest_streak INT DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY,
+      user_id INT REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      priority VARCHAR(50) DEFAULT 'medium',
+      due_date TIMESTAMP WITH TIME ZONE,
+      xp_reward INT DEFAULT 0,
+      status VARCHAR(50) DEFAULT 'todo',
+      position INT DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS total_xp INT DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS level INT DEFAULT 1;
@@ -109,7 +136,6 @@ async function runMigrations() {
   console.log('[migrate] Done.');
   await pool.end();
 }
-
 runMigrations().catch(err => {
   console.error('[migrate] Failed:', err);
   process.exit(1);
