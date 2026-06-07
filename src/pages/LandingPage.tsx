@@ -3,11 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../api/axios";
 import TopBar from "../components/TopBar";
-import AIReportCard from "../components/AIReportCard";
-import { fetchReportHistory } from "../api/reports";
-import type { AIWeeklyReport } from "../components/types/report";
-import { shouldShowDashboardReport } from "../components/types/report";
-import { Timer, LayoutDashboard, Trophy, BarChart3, LogOut } from "lucide-react";
+import { Timer, LayoutDashboard, Trophy, BarChart3, LogOut, BrainCircuit, Shield, Coins } from "lucide-react";
 import { clearAuthToken, getAuthToken } from "../utils/authToken";
 
 type DashboardTask = {
@@ -27,39 +23,71 @@ type DashboardData = {
     username?: string;
     current_streak?: number;
     longest_streak?: number;
+    streak_tokens?: number;
+    streak_shields?: number;
+    streak_shield_cost?: number;
   };
 };
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [latestReport, setLatestReport] = useState<AIWeeklyReport | null>(null);
+  const [shieldBuying, setShieldBuying] = useState(false);
+  const [shieldMessage, setShieldMessage] = useState("");
+
+  const fetchDashboard = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await api.get("/users/me/dashboard", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
-    async function fetchDashboard() {
-      try {
-        const token = getAuthToken();
-        const response = await api.get("/users/me/dashboard", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setDashboardData(response.data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    async function fetchReports() {
-      try {
-        const reports = await fetchReportHistory();
-        setLatestReport(reports[0] || null);
-      } catch (error) {
-        console.error("Failed to fetch AI reports", error);
-      }
-    }
-
     fetchDashboard();
-    fetchReports();
   }, []);
+
+  const handleBuyShield = async () => {
+    try {
+      setShieldBuying(true);
+      setShieldMessage("");
+
+      const token = getAuthToken();
+      const response = await api.post(
+        "/users/buy-shield",
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      setDashboardData((current) =>
+        current
+          ? {
+              ...current,
+              user: {
+                ...current.user,
+                streak_tokens: response.data.streak_tokens,
+                streak_shields: response.data.streak_shields,
+                streak_shield_cost: response.data.streak_shield_cost,
+              },
+            }
+          : current,
+      );
+      setShieldMessage("Shield added.");
+    } catch (error) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      setShieldMessage(
+        apiError.response?.data?.error || "Could not buy a streak shield right now.",
+      );
+    } finally {
+      setShieldBuying(false);
+    }
+  };
 
   const handleLogout = () => {
     clearAuthToken();
@@ -80,6 +108,10 @@ const LandingPage = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
   };
+  const streakTokens = dashboardData?.user?.streak_tokens || 0;
+  const streakShields = dashboardData?.user?.streak_shields || 0;
+  const shieldCost = dashboardData?.user?.streak_shield_cost || 100;
+  const canBuyShield = streakTokens >= shieldCost && !shieldBuying;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 transition-colors dark:bg-slate-900 dark:text-slate-100">
@@ -123,6 +155,47 @@ const LandingPage = () => {
           </div>
         </motion.div>
 
+        <motion.div
+          variants={itemVariants}
+          className="relative mb-10 overflow-hidden rounded-2xl border border-cyan-200 bg-cyan-50 p-4 shadow-xl shadow-cyan-100/70 dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:shadow-black/20"
+        >
+          <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-300/30 dark:bg-cyan-300/10" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-cyan-600 shadow-sm dark:bg-slate-900 dark:text-cyan-300">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <p className="font-black text-slate-900 dark:text-white">
+                    Streak Shields: {streakShields}
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 dark:text-cyan-300">
+                    <Coins className="h-4 w-4" />
+                    {streakTokens} tokens
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Buy a shield for {shieldCost} tokens to protect one missed streak day.
+                </p>
+                {shieldMessage && (
+                  <p className="mt-1 text-sm font-semibold text-cyan-800 dark:text-cyan-200">
+                    {shieldMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleBuyShield}
+              disabled={!canBuyShield}
+              className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+            >
+              {shieldBuying ? "Buying..." : "Buy Shield"}
+            </button>
+          </div>
+        </motion.div>
+
         <motion.div variants={itemVariants} className="mb-12 text-center">
           <h1 className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-5xl font-black text-slate-900 dark:text-white">
             <span>Welcome back,</span>
@@ -137,12 +210,6 @@ const LandingPage = () => {
             Select a module to continue your productivity journey.
           </p>
         </motion.div>
-
-        {latestReport && shouldShowDashboardReport(latestReport) && (
-          <motion.div variants={itemVariants} className="mb-12">
-            <AIReportCard report={latestReport} />
-          </motion.div>
-        )}
 
         <motion.div variants={itemVariants} className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Link to="/kanban" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-indigo-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95">
@@ -182,6 +249,16 @@ const LandingPage = () => {
             <div className="relative z-10 pr-16">
               <h2 className="text-2xl font-bold text-white leading-snug break-words">Leaderboard</h2>
               <p className="mt-2 text-amber-100">See weekly top performers.</p>
+            </div>
+          </Link>
+
+          <Link to="/weekly-reports" className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-3xl bg-cyan-500 p-8 shadow-2xl transition hover:scale-105 active:scale-95 md:col-start-2 md:row-start-2">
+            <div className="absolute -right-6 -top-6 rounded-full bg-white/20 p-8">
+              <BrainCircuit className="h-16 w-16 text-white" />
+            </div>
+            <div className="relative z-10 pr-16">
+              <h2 className="text-2xl font-bold text-white leading-snug break-words">AI Reports</h2>
+              <p className="mt-2 text-cyan-100">Review your weekly productivity coach summary.</p>
             </div>
           </Link>
         </motion.div>

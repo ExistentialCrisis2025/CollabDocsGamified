@@ -9,6 +9,7 @@ import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
 
 import { Flame, Star, Trophy } from "lucide-react";
+import { getAuthToken } from "../utils/authToken";
 
 type Props = {
   fetchDashboard: () => void;
@@ -237,23 +238,6 @@ const Kanban = (prop: Props) => {
       return response;
     } catch (error) {
       console.error(error);
-    }
-  }
-
-  async function fetchQuests() {
-    try {
-      console.log("Hello");
-      const token = localStorage.getItem("token");
-
-      const response = await api.get("/quests/today", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setQuests(response.data.quests);
-    } catch (error) {
-      console.error("Failed to fetch quests due to ", error);
     }
   }
 

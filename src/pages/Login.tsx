@@ -3,14 +3,34 @@ import { useEffect } from "react";
 
 import api from "../api/axios";
 import AuthLayout from "../layouts/AuthLayout";
-import { useNavigate } from "react-router-dom";
+import AuthMessageBanner from "../components/AuthMessageBanner";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAuthToken, setAuthToken } from "../utils/authToken";
+import { Eye, EyeOff } from "lucide-react";
+
+const oauthErrorMessages: Record<string, string> = {
+  oauth_denied: "Google sign-in was cancelled. You can try again whenever you are ready.",
+  oauth_invalid: "Google sign-in could not be verified. Please try again.",
+  oauth_state: "Your Google sign-in session expired. Please start again.",
+  oauth_config: "Google sign-in is not configured correctly yet.",
+  oauth_token: "Google sign-in could not create a session. Please try again.",
+  oauth_profile: "Google could not share the profile details needed to sign you in.",
+  oauth_server: "Google sign-in is temporarily unavailable. Please try again shortly.",
+};
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  const apiError = error as { response?: { data?: { error?: string } } };
+  return apiError.response?.data?.error || fallback;
+};
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const token = getAuthToken();
 
@@ -20,12 +40,23 @@ const Login = () => {
     }
   }, [navigate, token]);
 
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      setBannerMessage(
+        oauthErrorMessages[error] || "Sign-in could not be completed. Please try again.",
+      );
+    }
+  }, [searchParams]);
+
   function handleEmailInput(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
+    setBannerMessage("");
   }
 
   function handlePasswordInput(e: React.ChangeEvent<HTMLInputElement>) {
     setPassword(e.target.value);
+    setBannerMessage("");
   }
 
   function handleRemember() {
@@ -44,6 +75,21 @@ const Login = () => {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (!email.trim()) {
+      setBannerMessage("Enter your email address to log in.");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setBannerMessage("Enter a valid email address.");
+      return;
+    }
+
+    if (!password) {
+      setBannerMessage("Enter your password to log in.");
+      return;
+    }
+
     const userData = {
       email: email,
       password: password,
@@ -61,13 +107,15 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error logging in:", error);
-      alert("Invalid credentials");
+      setBannerMessage(
+        getApiErrorMessage(error, "Invalid credentials. Please check your email and password."),
+      );
     }
   }
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-400">
             Log In
@@ -75,6 +123,11 @@ const Login = () => {
           <h1 className="text-3xl font-black text-white">Welcome back</h1>
           <p className="text-sm text-slate-400">Log in to your account.</p>
         </div>
+
+        <AuthMessageBanner
+          message={bannerMessage}
+          onDismiss={() => setBannerMessage("")}
+        />
 
         <div className="space-y-4">
           <div>
@@ -104,15 +157,29 @@ const Login = () => {
               Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Enter your password"
-              name="psw"
-              required
-              onChange={handlePasswordInput}
-              value={password}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                name="psw"
+                required
+                onChange={handlePasswordInput}
+                value={password}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 pr-12 text-slate-100 placeholder-slate-500 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-cyan-300"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

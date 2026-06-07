@@ -6,12 +6,14 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import OAuthCallback from "./pages/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 import Analytics from "./pages/Analytics";
 import LandingPage from "./pages/LandingPage";
 import KanbanPage from "./pages/KanbanPage";
 import PomodoroPage from "./pages/PomodoroPage";
 import ProfilePage from "./pages/ProfilePage";
 import Settings from "./pages/Settings";
+import WeeklyReportsPage from "./pages/WeeklyReportsPage";
 import { Toaster } from "react-hot-toast";
 
 import { Routes, Route } from "react-router-dom";
@@ -20,6 +22,7 @@ import Leaderboard from "./pages/Leaderboard";
 function App() {
   return (
     <div>
+      <ScrollToTop />
       <Toaster
         position="top-right"
         gutter={12}
@@ -84,6 +87,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/weekly-reports"
+          element={
+            <ProtectedRoute>
+              <WeeklyReportsPage />
             </ProtectedRoute>
           }
         ></Route>

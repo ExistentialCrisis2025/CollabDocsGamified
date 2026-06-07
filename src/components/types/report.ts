@@ -17,24 +17,65 @@ type ReportLike = Record<string, unknown>;
 const asRecord = (value: unknown): ReportLike =>
   typeof value === "object" && value !== null ? (value as ReportLike) : {};
 
+const cleanReportText = (value: unknown) =>
+  String(value || "")
+    .replace(/\*\*/g, "")
+    .replace(/^[\s#*-]+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const asArray = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value.filter(Boolean).map(String);
+    return value.map(cleanReportText).filter(Boolean);
   }
 
   if (typeof value === "string" && value.trim()) {
     return value
       .split(/\n|;/)
-      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .map(cleanReportText)
       .filter(Boolean);
   }
 
   return [];
 };
 
+const parseTextReport = (text: string): ReportLike => {
+  const headingPattern =
+    /\*{0,2}\s*(?:\d+\.\s*)?(Summary|What went well|Areas to improve|Next week goal|Next steps|Wins|Opportunities)\s*\*{0,2}\s*:?\s*/gi;
+  const matches = Array.from(text.matchAll(headingPattern));
+
+  if (!matches.length) {
+    return { summary: cleanReportText(text) };
+  }
+
+  const parsed: ReportLike = {};
+
+  matches.forEach((match, index) => {
+    const heading = String(match[1]).toLowerCase();
+    const start = (match.index || 0) + match[0].length;
+    const end = matches[index + 1]?.index ?? text.length;
+    const content = cleanReportText(text.slice(start, end));
+
+    if (!content) return;
+
+    if (heading === "summary") parsed.summary = content;
+    if (heading === "what went well" || heading === "wins") parsed.wins = [content];
+    if (heading === "areas to improve" || heading === "opportunities") {
+      parsed.opportunities = [content];
+    }
+    if (heading === "next week goal" || heading === "next steps") {
+      parsed.next_steps = [content];
+      parsed.focus = content;
+    }
+  });
+
+  return Object.keys(parsed).length ? parsed : { summary: cleanReportText(text) };
+};
+
 const parseReportPayload = (report: ReportLike): ReportLike => {
   const payload =
     report.report ||
+    report.report_text ||
     report.response ||
     report.content ||
     report.ai_response ||
@@ -47,9 +88,9 @@ const parseReportPayload = (report: ReportLike): ReportLike => {
       const parsed = JSON.parse(payload);
       return typeof parsed === "object" && parsed !== null
         ? parsed
-        : { summary: payload };
+        : parseTextReport(payload);
     } catch {
-      return { summary: payload };
+      return parseTextReport(payload);
     }
   }
 
@@ -61,7 +102,7 @@ const firstString = (...values: unknown[]) => {
     (item): item is string => typeof item === "string" && item.trim().length > 0,
   );
 
-  return value?.trim();
+  return cleanReportText(value);
 };
 
 export const normalizeReport = (report: ReportLike): AIWeeklyReport => {

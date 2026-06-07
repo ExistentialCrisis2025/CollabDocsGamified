@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useThemeStore } from "../store/themeStore";
 import TopBar from "../components/TopBar";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Moon, Sun, Bell, Globe, Shield } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Bell, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../api/axios";
 import { getAuthToken } from "../utils/authToken";
@@ -19,34 +19,10 @@ const Settings = () => {
 
     return saved || Intl.DateTimeFormat().resolvedOptions().timeZone;
   });
-  const [shields, setShields] = useState(0);
-
   useEffect(() => {
-    // Try loading from localStorage first to keep it functional
-
-    // Try fetching shield count if backend has it
-    async function fetchShield() {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await api.get("/users/me/shield", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setShields(response.data.shield_used_at ? 0 : 1);
-      } catch (error) {
-        console.error("Failed to fetch shield", error);
-      }
-    }
-    fetchShield();
-
     async function fetchSettings() {
       try {
-        const token = localStorage.getItem("token");
-        // We assume dashboard or a user endpoint returns shield info,
-        // if not, we default to 0.
+        const token = getAuthToken();
         const response = await api.get("/users/me/dashboard", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +57,7 @@ const Settings = () => {
     localStorage.setItem("timezone", val);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
 
       await api.patch(
         "/users/me/timezone",
@@ -210,30 +186,6 @@ const Settings = () => {
                   {Intl.DateTimeFormat().resolvedOptions().timeZone} (Auto)
                 </option>
               </select>
-            </div>
-          </section>
-
-          {/* Streak Shield */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
-            <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-700">
-              <Shield className="h-6 w-6 text-indigo-500" />
-              <h2 className="text-xl font-bold">Streak Shield</h2>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">
-                  Active Shields: {shields}
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Shields protect your streak if you miss a day.
-                </p>
-              </div>
-              <button
-                disabled
-                className="rounded-xl bg-indigo-100 px-5 py-2.5 font-bold text-indigo-700 transition hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:hover:bg-indigo-500/30"
-              >
-                Coming Soon
-              </button>
             </div>
           </section>
         </div>

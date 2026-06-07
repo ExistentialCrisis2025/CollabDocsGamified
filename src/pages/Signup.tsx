@@ -2,13 +2,23 @@ import { useEffect, useState } from "react";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import AuthMessageBanner from "../components/AuthMessageBanner";
 import { getAuthToken, setAuthToken } from "../utils/authToken";
+import { Eye, EyeOff } from "lucide-react";
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  const apiError = error as { response?: { data?: { error?: string } } };
+  return apiError.response?.data?.error || fallback;
+};
 
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState("");
   const navigate = useNavigate();
 
   const token = getAuthToken();
@@ -17,22 +27,26 @@ const Signup = () => {
     if (token) {
       navigate("/dashboard");
     }
-  });
+  }, [navigate, token]);
 
   function handleUsernameInput(e: React.ChangeEvent<HTMLInputElement>) {
     setUsername(e.target.value);
+    setBannerMessage("");
   }
 
   function handleEmailInput(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
+    setBannerMessage("");
   }
 
   function handlePasswordInput(e: React.ChangeEvent<HTMLInputElement>) {
     setPassword(e.target.value);
+    setBannerMessage("");
   }
 
   function handlePasswordConfirmation(e: React.ChangeEvent<HTMLInputElement>) {
     setConfirmPassword(e.target.value);
+    setBannerMessage("");
   }
 
   function handleClick() {
@@ -47,13 +61,28 @@ const Signup = () => {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (!username.trim()) {
+      setBannerMessage("Choose a username to create your account.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setBannerMessage("Enter your email address to create your account.");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setBannerMessage("Enter a valid email address.");
+      return;
+    }
+
     if (password.length < 8) {
-      alert("Password should contain at least 8 characters");
+      setBannerMessage("Password must contain at least 8 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setBannerMessage("Passwords do not match. Please retype them.");
       return;
     }
 
@@ -73,13 +102,15 @@ const Signup = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
-      alert("Signup failed. User might already exist.");
+      setBannerMessage(
+        getApiErrorMessage(error, "Signup failed. This username may already exist."),
+      );
     }
   }
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div className="space-y-2">
           <p className="text-sm font-medium text-indigo-400">
             Sign Up
@@ -87,6 +118,11 @@ const Signup = () => {
           <h1 className="text-3xl font-bold text-white">Create an account</h1>
           <p className="text-sm text-slate-400">Join the platform to start managing tasks.</p>
         </div>
+
+        <AuthMessageBanner
+          message={bannerMessage}
+          onDismiss={() => setBannerMessage("")}
+        />
 
         <div className="space-y-4">
           <div>
@@ -135,15 +171,29 @@ const Signup = () => {
               Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Create a password"
-              name="psw"
-              required
-              onChange={handlePasswordInput}
-              value={password}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password"
+                name="psw"
+                required
+                onChange={handlePasswordInput}
+                value={password}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 pr-12 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-indigo-300"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -154,15 +204,33 @@ const Signup = () => {
               Confirm Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Retype your password"
-              name="confirmPsw"
-              required
-              onChange={handlePasswordConfirmation}
-              value={confirmPassword}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Retype your password"
+                name="confirmPsw"
+                required
+                onChange={handlePasswordConfirmation}
+                value={confirmPassword}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 pr-12 text-slate-100 placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+              />
+              <button
+                type="button"
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-indigo-300"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
