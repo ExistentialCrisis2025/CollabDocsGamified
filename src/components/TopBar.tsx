@@ -1,5 +1,11 @@
 import { Link } from "react-router-dom";
-import { Moon, Sun, UserCircle2, Flame, Settings as SettingsIcon } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  UserCircle2,
+  Flame,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
@@ -9,6 +15,7 @@ import { getAuthToken } from "../utils/authToken";
 const TopBar = () => {
   const { isDark, toggleTheme } = useThemeStore();
   const [streak, setStreak] = useState(0);
+  const username = localStorage.getItem("username") || "default";
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -39,7 +46,7 @@ const TopBar = () => {
       <div className="flex items-center gap-4">
         {streak > 0 && (
           <AnimatePresence>
-            <motion.div 
+            <motion.div
               key={streak}
               initial={{ scale: 1.5, rotate: -15 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -69,7 +76,11 @@ const TopBar = () => {
           to="/profile"
           className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 hover:scale-105 active:scale-95"
         >
-          <UserCircle2 className="h-5 w-5" />
+          <img
+            src={`https://api.dicebear.com/7.x/bottts/svg?seed=${username}&backgroundColor=6366f1`}
+            alt="avatar"
+            className="h-6 w-6 rounded-full"
+          />
           <span className="hidden sm:block">Profile</span>
         </Link>
       </div>

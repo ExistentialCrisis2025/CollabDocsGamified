@@ -103,6 +103,8 @@ const Login = () => {
       setEmail("");
       setPassword("");
       setRemember(false);
+      
+      localStorage.setItem("username", response.data.user.username);
 
       navigate("/dashboard");
     } catch (error) {

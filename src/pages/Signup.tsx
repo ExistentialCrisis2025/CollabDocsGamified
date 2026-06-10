@@ -99,11 +99,15 @@ const Signup = () => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      localStorage.setItem("username", response.data.user.username);
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
       setBannerMessage(
-        getApiErrorMessage(error, "Signup failed. This username may already exist."),
+        getApiErrorMessage(
+          error,
+          "Signup failed. This username may already exist.",
+        ),
       );
     }
   }
@@ -112,11 +116,11 @@ const Signup = () => {
     <AuthLayout>
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-indigo-400">
-            Sign Up
-          </p>
+          <p className="text-sm font-medium text-indigo-400">Sign Up</p>
           <h1 className="text-3xl font-bold text-white">Create an account</h1>
-          <p className="text-sm text-slate-400">Join the platform to start managing tasks.</p>
+          <p className="text-sm text-slate-400">
+            Join the platform to start managing tasks.
+          </p>
         </div>
 
         <AuthMessageBanner
