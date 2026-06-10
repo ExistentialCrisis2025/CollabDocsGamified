@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import api from "../api/axios";
+import { getAuthToken, clearAuthToken } from "../utils/authToken";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "valid" | "invalid">(
@@ -8,7 +9,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     if (!token) {
       setStatus("invalid");
@@ -22,9 +23,12 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
       .then(() => setStatus("valid"))
       .catch((err) => {
         if (err.response?.status === 401 || err.response?.status === 403) {
-          localStorage.removeItem("token");
+          clearAuthToken();
+          setStatus("invalid");
+        } else {
+          // 502, network error, backend sleeping — don't clear token
+          setStatus("valid");
         }
-        setStatus("invalid");
       });
   }, []);
 
