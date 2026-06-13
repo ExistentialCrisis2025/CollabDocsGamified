@@ -46,6 +46,9 @@ async function runMigrations() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS shield_used_at TIMESTAMP;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'UTC';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS google_access_token TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS google_refresh_token TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS google_token_expiry BIGINT;
 
     UPDATE users
     SET streak_tokens = COALESCE(total_xp, 0),

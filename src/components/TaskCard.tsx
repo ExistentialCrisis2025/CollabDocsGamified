@@ -8,7 +8,10 @@ type prop = {
   index: number;
 };
 
+import { useNavigate } from "react-router-dom";
+
 const TaskCard = (Prop: prop) => {
+  const navigate = useNavigate();
   const taskStatus = Prop.task.status;
 
   const statuses: Status[] = ["todo", "in-progress", "done"];
@@ -19,6 +22,12 @@ const TaskCard = (Prop: prop) => {
     high: "bg-red-500/20 text-red-300 border-red-500/40",
     medium: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
     low: "bg-green-500/20 text-green-300 border-green-500/40",
+  };
+
+  const handleFocus = () => {
+    navigate("/pomodoro", {
+      state: { taskId: Prop.task.id, taskTitle: Prop.task.title },
+    });
   };
 
   return (
@@ -77,38 +86,35 @@ const TaskCard = (Prop: prop) => {
             </span>
           </div>
 
-          <div className="mb-3 flex flex-wrap gap-2">
-            {statusNeeded.map((stat) => (
+          <div className="flex gap-2 w-full">
+            <div className="mb-3 flex flex-wrap gap-2 flex-1">
+              {statusNeeded.map((stat) => (
+                <button
+                  key={stat}
+                  onClick={() => Prop.updateTaskStatus(Prop.task.id, stat)}
+                  className="rounded-lg bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-500 hover:text-black w-full text-center"
+                >
+                  Move to {stat}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2 w-1/3">
               <button
-                key={stat}
-                onClick={() => Prop.updateTaskStatus(Prop.task.id, stat)}
-                className="rounded-lg bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-500 hover:text-black"
+                onClick={() => Prop.removeTask(Prop.task.id)}
+                className="w-full rounded-lg bg-red-500/10 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-500 hover:text-white"
               >
-                Move to {stat}
+                Delete
               </button>
-            ))}
+
+              <button
+                onClick={handleFocus}
+                className="w-full rounded-lg bg-indigo-500/20 py-1.5 text-xs font-medium text-indigo-400 transition hover:bg-indigo-500 hover:text-white"
+              >
+                Focus
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={() => Prop.removeTask(Prop.task.id)}
-            className="mt-2 w-full rounded-lg bg-red-500/10 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500 hover:text-white"
-          >
-            Delete
-          </button>
-
-          <button
-            className="
-            rounded-lg
-            bg-red-500/20
-            px-3 py-1.5
-            text-xs font-medium
-            text-red-400
-            transition hover:bg-red-500
-            hover:text-white
-            "
-          >
-            Focus
-          </button>
         </div>
       )}
     </Draggable>

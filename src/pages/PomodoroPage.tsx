@@ -1,10 +1,16 @@
 import { motion } from "framer-motion";
 import TopBar from "../components/TopBar";
 import PomodoroTimer from "../components/PomodoroTimer";
+import LofiPlayer from "../components/LofiPlayer";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useLocation } from "react-router-dom";
+
 const PomodoroPage = () => {
+  const location = useLocation();
+  const { taskId, taskTitle } = location.state || { taskId: null, taskTitle: "Personal Focus Session" };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <TopBar />
@@ -21,7 +27,9 @@ const PomodoroPage = () => {
           </Link>
         </div>
 
-        <PomodoroTimer taskId={null} taskTitle="Personal Focus Session" />
+        <PomodoroTimer taskId={taskId} taskTitle={taskTitle} />
+        
+        <LofiPlayer />
 
         <div className="mt-8 text-center text-slate-500 dark:text-slate-400">
             <p>Use the Pomodoro technique to stay focused.</p>

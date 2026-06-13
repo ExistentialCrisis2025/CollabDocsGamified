@@ -31,7 +31,12 @@ app.use('/quotes',      quoteRoutes);        // GET /quotes/random
 app.use('/analytics',analyticsRoutes)
 app.use("/reports",reportRoutes);
 
+import calendarRoutes from './routes/calendarRoutes';
+import musicRoutes from './routes/musicRoutes';
+
 app.use('/badges',badgeRoutes);
+app.use('/calendar', calendarRoutes);
+app.use('/music', musicRoutes);
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'OK' }));
 

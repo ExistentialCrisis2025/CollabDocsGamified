@@ -58,7 +58,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
           <div className="flex flex-col justify-between gap-10">
           <div>
             <div className="text-xs font-bold uppercase tracking-[0.45em] text-cyan-400">
-              CollabDocs
+              Task Forge
             </div>
             <h1 className="mt-6 text-4xl font-black text-slate-100 sm:text-5xl">
               Master your missions

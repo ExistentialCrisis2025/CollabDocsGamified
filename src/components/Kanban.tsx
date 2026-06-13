@@ -3,12 +3,12 @@ import type { Priority, Status, Task } from "./types/types";
 import api from "../api/axios";
 import toast from "react-hot-toast";
 import LevelUpOverlay from "./LevelUpOverlay";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import KanbanColumn from "./KanbanColumn";
 import { DragDropContext } from "@hello-pangea/dnd";
 
-import { Flame, Star, Trophy } from "lucide-react";
+import { Flame, Star, Trophy, Calendar } from "lucide-react";
 import { getAuthToken } from "../utils/authToken";
 
 type Props = {
@@ -28,6 +28,7 @@ const Kanban = (prop: Props) => {
   const [loading, setLoading] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
+  const [calendarPrompt, setCalendarPrompt] = useState<{show: boolean, title: string, description: string, date: string | null} | null>(null);
 
   const [xpData, setXpData] = useState({
     total_xp: 0,
@@ -271,7 +272,7 @@ const Kanban = (prop: Props) => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       );
 
       setTasks((prevTasks) => [...prevTasks, response.data]);
@@ -279,6 +280,8 @@ const Kanban = (prop: Props) => {
       toast.success("Task created successfully!", {
         duration: 2500,
       });
+
+      setCalendarPrompt({ show: true, title, description, date: dueDate || null });
 
       setTitle("");
       setDescription("");
@@ -402,14 +405,73 @@ const Kanban = (prop: Props) => {
     }
   }, []);
 
+  const handleCalendarPromptResponse = async (add: boolean) => {
+    if (add && calendarPrompt) {
+      try {
+        const token = getAuthToken();
+        await api.post(
+          "/calendar/events",
+          { title: calendarPrompt.title, description: calendarPrompt.description, date: calendarPrompt.date },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Added to Google Calendar!", { duration: 2500 });
+      } catch (calendarError: any) {
+        console.error("Error adding to calendar:", calendarError);
+        if (calendarError.response?.status === 400) {
+          toast.error("Please connect your Google Calendar in the Top Bar first.");
+        } else {
+          toast.error("Failed to add to calendar.");
+        }
+      }
+    }
+    setCalendarPrompt(null);
+  };
+
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <AnimatePresence>
         {showLevelUp && (
           <LevelUpOverlay
             level={newLevel}
             onClose={() => setShowLevelUp(false)}
           />
+        )}
+        {calendarPrompt?.show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 max-w-sm w-full border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-center gap-3 mb-4 text-indigo-500">
+                <Calendar className="w-8 h-8" />
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Add to Calendar?</h3>
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                Do you want to automatically schedule "<span className="font-semibold">{calendarPrompt.title}</span>" in your Google Calendar?
+              </p>
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={() => handleCalendarPromptResponse(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                >
+                  Not Now
+                </button>
+                <button
+                  onClick={() => handleCalendarPromptResponse(true)}
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition"
+                >
+                  Yes, Add It
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

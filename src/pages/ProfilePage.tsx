@@ -174,7 +174,7 @@ const ProfilePage = () => {
               {dashboardData?.user?.username || "Player One"}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mb-4">
-              Level {dashboardData?.user?.level || 1} • CollabDocs Voyager
+              Level {dashboardData?.user?.level || 1} • Task Forge Voyager
             </p>
 
             {/* XP PROGRESS */}

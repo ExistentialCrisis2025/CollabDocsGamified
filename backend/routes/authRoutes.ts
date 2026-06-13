@@ -186,6 +186,12 @@ router.get('/auth/google/callback', async (req: Request, res: Response): Promise
       return;
     }
 
+    if (state.startsWith('calendar_')) {
+      const realToken = state.replace('calendar_', '');
+      res.redirect(`/calendar/callback?code=${code}&state=${realToken}`);
+      return;
+    }
+
     const stateKey = `oauth:state:${state}`;
     const storedState = await redisClient.get(stateKey);
     if (!storedState) {
