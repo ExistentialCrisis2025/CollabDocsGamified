@@ -9,7 +9,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-database-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-cache-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
-**🔗 Live App:** [https://your-deployed-link.example.com]([https://your-deployed-link.example.com](https://collabdocs-zqn1.onrender.com/dashboard))
+**🔗 Live App:** [Live URL]([https://your-deployed-link.example.com](https://collabdocs-zqn1.onrender.com/dashboard))
 
 ---
 
@@ -100,7 +100,7 @@ A dedicated analytics page visualizes XP growth, task completion rates, and stre
 
 This project is fully deployed and live at:
 
-**👉 [https://your-deployed-link.example.com](https://collabdocs-zqn1.onrender.com/dashboard)**
+**👉 [Live URL](https://collabdocs-zqn1.onrender.com/dashboard)**
 
 ---
 
