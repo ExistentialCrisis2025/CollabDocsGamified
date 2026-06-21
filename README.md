@@ -9,7 +9,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-database-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-cache-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
-**🔗 Live App:** [Live URL]([https://your-deployed-link.example.com](https://collabdocs-zqn1.onrender.com/dashboard))
+**🔗 [Live App:](https://collabdocs-zqn1.onrender.com/dashboard)** 
 
 ---
 
